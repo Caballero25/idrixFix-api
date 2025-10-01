@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  management_service:
+    build:
+      context: .
+      # Asegúrate de que esta ruta apunte al Dockerfile de tu servicio unificado
+      dockerfile: src/modules/management_service/Dockerfile
+    container_name: management_service
+    environment:
+      DATABASE_URL: mssql+pyodbc://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?driver=${DB_DRIVER}&TrustServerCertificate=${DB_TRUST_CERTIFICATE}
+
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 1433
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DRIVER: ${DB_DRIVER}
+      DB_TRUST_CERTIFICATE: ${DB_TRUST_CERTIFICATE}
+      MANAGEMENT_SERVICE_HOST: 0.0.0.0
+      MANAGEMENT_SERVICE_PORT: 8001
+      PYTHONPATH: /app
+    networks:
+      - management_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API Gateway (punto de entrada expuesto en el puerto 8000)
+  api_gateway:
+    build:
+      context: .
+      # Este debe ser el Dockerfile original del gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "8000:8000"
+    environment:
+      # El gateway necesita saber cómo comunicarse con el management_service
+      MANAGEMENT_SERVICE_URL: http://localhost:8001
+      GATEWAY_HOST: 0.0.0.0
+      GATEWAY_PORT: 8000
+      PYTHONPATH: /app
+    depends_on:
+      management_service:
+        condition: service_healthy
+    networks:
+      - management_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  management_network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+
