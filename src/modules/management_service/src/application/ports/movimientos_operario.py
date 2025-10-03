@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from datetime import date, datetime
 
 # Asumo que importas estas clases
@@ -7,6 +7,7 @@ from src.modules.management_service.src.domain.entities import WorkerMovement
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
     WorkerMovementUpdate,
+    WorkerMovementFilters
 )
 
 class IWorkerMovementRepository(ABC):
@@ -32,4 +33,15 @@ class IWorkerMovementRepository(ABC):
     
     @abstractmethod
     def delete(self, movement_id: int) -> bool:
+        pass
+    @abstractmethod
+    def count_by_filters(self, filters: WorkerMovementFilters) -> int:
+        """Cuenta el total de registros WorkerMovement según los filtros."""
+        pass
+    
+    @abstractmethod
+    def get_paginated_by_filters(
+        self, filters: WorkerMovementFilters, page: int, page_size: int
+    ) -> Tuple[List[WorkerMovement], int]:
+        """Obtiene una página de registros WorkerMovement y el conteo total."""
         pass

@@ -1,6 +1,7 @@
 # use_cases.py (Añadir las siguientes importaciones y la clase)
 from typing import List, Optional
 from datetime import date, datetime
+from math import ceil
 
 # Importar el puerto y los schemas
 from src.modules.management_service.src.application.ports.movimientos_operario import (
@@ -9,6 +10,9 @@ from src.modules.management_service.src.application.ports.movimientos_operario i
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
     WorkerMovementUpdate,
+    WorkerMovementPagination,
+    WorkerMovementFilters,
+    WorkerMovementPaginatedResponse,
     WorkerMovementResponse, # Aunque Use Case retorna la entidad, la importo por contexto
 )
 from src.modules.management_service.src.domain.entities import WorkerMovement
@@ -41,3 +45,26 @@ class WorkerMovementUseCases:
     def delete_movement(self, movement_id: int) -> bool:
         # Se elimina permanentemente, no hay soft delete en este modelo
         return self.repository.delete(movement_id)
+    
+    def count_movements_by_filters(self, filters: WorkerMovementFilters) -> int:
+        """Caso de uso para contar movimientos."""
+        return self.repository.count_by_filters(filters)
+    def get_movements_paginated_by_filters(
+        self, filters: WorkerMovementPagination
+    ) -> WorkerMovementPaginatedResponse:
+        """Caso de uso para obtener movimientos paginados con metadatos."""
+        
+        data, total_records = self.repository.get_paginated_by_filters(
+            filters=filters, page=filters.page, page_size=filters.page_size
+        )
+        
+        total_pages = ceil(total_records / filters.page_size) if total_records > 0 else 0
+
+        # Retornamos un DTO con la información de paginación
+        return {
+            "total_records": total_records,
+            "total_pages": total_pages,
+            "page": filters.page,
+            "page_size": filters.page_size,
+            "data": data, # Lista de entidades de dominio
+        }

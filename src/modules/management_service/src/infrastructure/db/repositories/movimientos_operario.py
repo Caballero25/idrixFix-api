@@ -1,9 +1,9 @@
 # repositories.py (Añadir las siguientes importaciones y la clase)
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 # Importaciones de los modelos, entidades, schemas y puertos
 from src.modules.management_service.src.infrastructure.db.models import WorkerMovementORM
@@ -11,6 +11,7 @@ from src.modules.management_service.src.domain.entities import WorkerMovement
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
     WorkerMovementUpdate,
+    WorkerMovementFilters
 )
 from src.modules.management_service.src.application.ports.movimientos_operario import (
     IWorkerMovementRepository,
@@ -112,3 +113,64 @@ class WorkerMovementRepository(IWorkerMovementRepository):
         except SQLAlchemyError as e:
             self.db.rollback()
             raise RepositoryError("No se pudo eliminar el movimiento.") from e
+    def _apply_filters(self, query, filters: WorkerMovementFilters):
+        """Función auxiliar para aplicar filtros comunes a consultas de conteo y selección."""
+        conditions = []
+        
+        # Filtro por rango de fecha_p
+        if filters.fecha_inicial and filters.fecha_final:
+            conditions.append(
+                WorkerMovementORM.fecha_p.between(filters.fecha_inicial, filters.fecha_final)
+            )
+        
+        # Filtro por codigo_operario
+        if filters.codigo_operario:
+            conditions.append(
+                WorkerMovementORM.codigo_operario == filters.codigo_operario
+            )
+        
+        if conditions:
+            query = query.filter(and_(*conditions))
+            
+        return query
+
+    def count_by_filters(self, filters: WorkerMovementFilters) -> int:
+        try:
+            query = self.db.query(WorkerMovementORM)
+            query = self._apply_filters(query, filters)
+            
+            # Usar count() en SQLAlchemy
+            return query.count()
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al contar los movimientos por filtros.") from e
+
+    def get_paginated_by_filters(
+        self, filters: WorkerMovementFilters, page: int, page_size: int
+    ) -> Tuple[List[WorkerMovement], int]:
+        try:
+            base_query = self.db.query(WorkerMovementORM)
+            
+            # 1. Obtener el conteo total con los filtros
+            count_query = self._apply_filters(base_query.session.query(func.count(WorkerMovementORM.id)), filters)
+            total_records = count_query.scalar()
+            
+            if total_records == 0:
+                return [], 0
+            
+            # 2. Aplicar filtros, paginación y ordenamiento para los datos
+            data_query = self._apply_filters(base_query, filters)
+            
+            # Ordenar por hora/fecha para paginación consistente (asumiendo descendente como en tu ejemplo)
+            data_query = data_query.order_by(WorkerMovementORM.fecha_p.desc(), WorkerMovementORM.hora.desc())
+            
+            # Aplicar paginación
+            offset = (page - 1) * page_size
+            data_query = data_query.limit(page_size).offset(offset)
+            
+            orm_list = data_query.all()
+            
+            domain_entities = [self._to_domain_entity(orm) for orm in orm_list]
+            
+            return domain_entities, total_records
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al obtener movimientos paginados.") from e

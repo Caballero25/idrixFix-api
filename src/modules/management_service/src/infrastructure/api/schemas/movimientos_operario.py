@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, conint
+from typing import Optional, List
 from datetime import date, datetime
 from src.modules.management_service.src.domain.entities import TipoMovimiento
 
@@ -35,3 +35,23 @@ class WorkerMovementResponse(WorkerMovementBase):
     id: int
     class Config:
         from_attributes = True # Pydantic V2 (o alias en V1)
+# Schema para la entrada de filtros (para conteo y paginación)
+class WorkerMovementFilters(BaseModel):
+    fecha_inicial: Optional[date] = None
+    fecha_final: Optional[date] = None
+    codigo_operario: Optional[str] = Field(None, max_length=255)
+
+
+# Schema para la paginación
+class WorkerMovementPagination(WorkerMovementFilters):
+    page: conint(ge=1) = 1 # Página actual (mínimo 1)
+    page_size: conint(ge=1) = 20 # Tamaño de página (mínimo 1)
+
+
+# Schema de respuesta para la paginación (útil para el front-end)
+class WorkerMovementPaginatedResponse(BaseModel):
+    total_records: int
+    total_pages: int
+    page: int
+    page_size: int
+    data: List[WorkerMovementResponse]
