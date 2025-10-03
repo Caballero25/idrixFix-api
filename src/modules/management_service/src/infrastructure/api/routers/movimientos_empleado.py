@@ -2,14 +2,15 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 from src.shared.base import get_db
+from math import ceil
 from src.shared.common.responses import success_response, error_response
 from src.shared.exceptions import RepositoryError, NotFoundError
 # Importar el repositorio y casos de uso del movimiento
 from src.modules.management_service.src.infrastructure.db.repositories.movimientos_operario import (
-    WorkerMovementRepository,
+    WorkerMovementRepository, RefMotivoRepository, RefDestinoMotivoRepository
 )
 from src.modules.management_service.src.application.use_cases.movimientos_operario import (
-    WorkerMovementUseCases,
+    WorkerMovementUseCases, RefMotivoUseCases, RefDestinoMotivoUseCases
 )
 # Importar los schemas del movimiento
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
@@ -18,7 +19,13 @@ from src.modules.management_service.src.infrastructure.api.schemas.movimientos_o
     WorkerMovementResponse,
     WorkerMovementFilters,
     WorkerMovementPagination,
-    WorkerMovementPaginatedResponse
+    WorkerMovementPaginatedResponse,
+    RefDestinoMotivoResponse,
+    RefMotivoResponse,
+    RefMotivoPagination,
+    RefDestinoMotivoPagination,
+    RefDestinoMotivoFilters,
+    RefMotivoFilters
 )
 
 router = APIRouter()
@@ -27,6 +34,13 @@ router = APIRouter()
 def get_movement_use_cases(db: Session = Depends(get_db)) -> WorkerMovementUseCases:
     repository = WorkerMovementRepository(db)
     return WorkerMovementUseCases(repository)
+def get_ref_motivo_use_cases(db: Session = Depends(get_db)) -> RefMotivoUseCases:
+    repository = RefMotivoRepository(db)
+    return RefMotivoUseCases(repository)
+
+def get_ref_destino_motivo_use_cases(db: Session = Depends(get_db)) -> RefDestinoMotivoUseCases:
+    repository = RefDestinoMotivoRepository(db)
+    return RefDestinoMotivoUseCases(repository)
 
 
 @router.post("/", response_model=WorkerMovementResponse, status_code=status.HTTP_201_CREATED)
@@ -154,6 +168,126 @@ def get_movements_paginated(
         return success_response(
             data=response_data_with_meta,
             message="Movimientos paginados obtenidos",
+        )
+    except RepositoryError as e:
+        return error_response(
+            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+# --- ENDPOINTS: REF_MOTIVOS ---
+
+# 1. TOTAL: Controlador para obtener el TOTAL de Motivos Activos
+@router.post("/motivos/total", status_code=status.HTTP_200_OK)
+def get_total_active_motives(
+    filters: RefMotivoFilters,
+    use_cases: RefMotivoUseCases = Depends(get_ref_motivo_use_cases),
+):
+    """Obtiene el número total de registros RefMotivos con estado='ACTIVO'."""
+    try:
+        total_records = use_cases.count_active_motives(filters)
+        return success_response(
+            data=total_records,
+            message="Total de motivos activos obtenido",
+        )
+    except RepositoryError as e:
+        return error_response(
+            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# 2. PAGINATED: Controlador para obtener Motivos Activos Paginados
+@router.post("/motivos/paginated", status_code=status.HTTP_200_OK)
+def get_active_motives_paginated(
+    pagination_params: RefMotivoPagination,
+    use_cases: RefMotivoUseCases = Depends(get_ref_motivo_use_cases),
+):
+    """Entrega los registros activos de RefMotivos paginados."""
+    try:
+        # 1. Obtener la data paginada (lista de entidades)
+        data_entities = use_cases.get_active_paginated_motives(pagination_params)
+        
+        # 2. Obtener el total (requiere una llamada separada al use case de conteo)
+        total_records = use_cases.count_active_motives(pagination_params)
+        
+        # 3. Mapeo y Respuesta
+        response_data = [
+            RefMotivoResponse.model_validate(d).model_dump(mode="json")
+            for d in data_entities
+        ]
+        
+        total_pages = ceil(total_records / pagination_params.page_size) if total_records > 0 else 0
+
+        response_data_with_meta = {
+            "total_records": total_records,
+            "total_pages": total_pages,
+            "page": pagination_params.page,
+            "page_size": pagination_params.page_size,
+            "data": response_data,
+        }
+        
+        return success_response(
+            data=response_data_with_meta,
+            message="Motivos activos paginados obtenidos",
+        )
+    except RepositoryError as e:
+        return error_response(
+            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# --- ENDPOINTS: REF_DESTINOS_MOTIVOS ---
+
+# 3. TOTAL: Controlador para obtener el TOTAL de Destinos por Motivo
+@router.post("/destinos_motivos/total", status_code=status.HTTP_200_OK)
+def get_total_destinos_by_motivo(
+    filters: RefDestinoMotivoFilters,
+    use_cases: RefDestinoMotivoUseCases = Depends(get_ref_destino_motivo_use_cases),
+):
+    """Obtiene el número total de registros RefDestinosMotivos filtrados por id_motivo."""
+    try:
+        total_records = use_cases.count_destinations_by_motivo(filters)
+        return success_response(
+            data=total_records,
+            message=f"Total de destinos para el motivo ID {filters.id_motivo} obtenido",
+        )
+    except RepositoryError as e:
+        return error_response(
+            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# 4. PAGINATED: Controlador para obtener Destinos por Motivo Paginados
+@router.post("/destinos_motivos/paginated", status_code=status.HTTP_200_OK)
+def get_destinos_by_motivo_paginated(
+    pagination_params: RefDestinoMotivoPagination,
+    use_cases: RefDestinoMotivoUseCases = Depends(get_ref_destino_motivo_use_cases),
+):
+    """Entrega los registros de RefDestinosMotivos filtrados por id_motivo, paginados."""
+    try:
+        # 1. Obtener la data paginada (lista de entidades)
+        data_entities = use_cases.get_destinations_paginated_by_motivo(pagination_params)
+        
+        # 2. Obtener el total (requiere una llamada separada al use case de conteo)
+        total_records = use_cases.count_destinations_by_motivo(pagination_params) # Reutiliza los filtros
+        
+        # 3. Mapeo y Respuesta
+        response_data = [
+            RefDestinoMotivoResponse.model_validate(d).model_dump(mode="json")
+            for d in data_entities
+        ]
+
+        total_pages = ceil(total_records / pagination_params.page_size) if total_records > 0 else 0
+
+        response_data_with_meta = {
+            "total_records": total_records,
+            "total_pages": total_pages,
+            "page": pagination_params.page,
+            "page_size": pagination_params.page_size,
+            "data": response_data,
+        }
+        
+        return success_response(
+            data=response_data_with_meta,
+            message=f"Destinos para el motivo ID {pagination_params.id_motivo} paginados obtenidos",
         )
     except RepositoryError as e:
         return error_response(

@@ -7,6 +7,10 @@ class TipoMovimiento(Enum):
     ENTRADA = "ENTRADA"
     SALIDA = "SALIDA"
 
+class EstadoEnum(Enum):
+    ACTIVO = "ACTIVO"
+    INACTIVO = "INACTIVO"
+
 
 @dataclass
 class WorkerMovement:
@@ -31,3 +35,28 @@ class WorkerMovement:
             and bool(self.motivo.strip())
             and bool(self.codigo_operario.strip())
         )
+
+@dataclass
+class RefMotivo:
+    """Entidad de dominio para una referencia de motivo de movimiento."""
+    id_motivo: Optional[int] = None
+    descripcion: str = ""
+    tipo_motivo: str = ""
+    es_justificado: bool = False
+    estado: str = EstadoEnum.ACTIVO.value
+
+    def is_active(self) -> bool:
+        return self.estado == EstadoEnum.ACTIVO.value
+
+
+@dataclass
+class RefDestinoMotivo:
+    """Entidad de dominio para un destino asociado a un motivo."""
+    id_destino: Optional[int] = None
+    id_motivo: int = 0
+    nombre_destino: str = ""
+    descripcion: Optional[str] = None
+    estado: str = EstadoEnum.ACTIVO.value
+
+    def is_active(self) -> bool:
+        return self.estado == EstadoEnum.ACTIVO.value

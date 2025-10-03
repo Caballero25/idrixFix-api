@@ -3,11 +3,13 @@ from typing import List, Optional, Tuple
 from datetime import date, datetime
 
 # Asumo que importas estas clases
-from src.modules.management_service.src.domain.entities import WorkerMovement
+from src.modules.management_service.src.domain.entities import WorkerMovement, RefMotivo, RefDestinoMotivo
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
     WorkerMovementUpdate,
-    WorkerMovementFilters
+    WorkerMovementFilters,
+    RefMotivoFilters, 
+    RefDestinoMotivoFilters,
 )
 
 class IWorkerMovementRepository(ABC):
@@ -44,4 +46,23 @@ class IWorkerMovementRepository(ABC):
         self, filters: WorkerMovementFilters, page: int, page_size: int
     ) -> Tuple[List[WorkerMovement], int]:
         """Obtiene una página de registros WorkerMovement y el conteo total."""
+        pass
+
+class IRefMotivoRepository(ABC):
+    """Puerto para la gestión de motivos de referencia."""
+    
+    @abstractmethod
+    def get_paginated_active(self, page: int, page_size: int) -> Tuple[List[RefMotivo], int]:
+        """Obtiene motivos activos (estado='ACTIVO') paginados."""
+        pass
+
+
+class IRefDestinoMotivoRepository(ABC):
+    """Puerto para la gestión de destinos de motivos de referencia."""
+    
+    @abstractmethod
+    def get_paginated_by_motivo(
+        self, id_motivo: int, page: int, page_size: int
+    ) -> Tuple[List[RefDestinoMotivo], int]:
+        """Obtiene destinos paginados filtrados por id_motivo."""
         pass

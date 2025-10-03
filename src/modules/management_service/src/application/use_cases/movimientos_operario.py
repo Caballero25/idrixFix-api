@@ -5,7 +5,7 @@ from math import ceil
 
 # Importar el puerto y los schemas
 from src.modules.management_service.src.application.ports.movimientos_operario import (
-    IWorkerMovementRepository,
+    IWorkerMovementRepository, IRefMotivoRepository, IRefDestinoMotivoRepository
 )
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
@@ -14,8 +14,13 @@ from src.modules.management_service.src.infrastructure.api.schemas.movimientos_o
     WorkerMovementFilters,
     WorkerMovementPaginatedResponse,
     WorkerMovementResponse, # Aunque Use Case retorna la entidad, la importo por contexto
+    RefMotivoPagination, 
+    RefDestinoMotivoPagination, 
+    RefMotivoFilters, 
+    RefDestinoMotivoFilters
+
 )
-from src.modules.management_service.src.domain.entities import WorkerMovement
+from src.modules.management_service.src.domain.entities import WorkerMovement, RefMotivo, RefDestinoMotivo
 
 
 class WorkerMovementUseCases:
@@ -68,3 +73,50 @@ class WorkerMovementUseCases:
             "page_size": filters.page_size,
             "data": data, # Lista de entidades de dominio
         }
+    
+class RefMotivoUseCases:
+    def __init__(self, repository: IRefMotivoRepository):
+        self.repository = repository
+        
+    def count_active_motives(self, filters: RefMotivoFilters) -> int:
+        """Cuenta el total de motivos activos (el filtro ACTIVO es implícito en el repo)."""
+        # Aunque RefMotivoFilters está vacío, lo pasamos por consistencia
+        # para que el repositorio pueda usar el método de conteo base si es necesario.
+        _, total_records = self.repository.get_paginated_active(page=1, page_size=1)
+        return total_records
+
+    def get_active_paginated_motives(self, pagination_params: RefMotivoPagination) -> List[RefMotivo]:
+        """Obtiene una lista de motivos activos paginados (solo data)."""
+        
+        data, _ = self.repository.get_paginated_active(
+            page=pagination_params.page, 
+            page_size=pagination_params.page_size
+        )
+        # Solo retornamos la lista de entidades
+        return data
+
+
+class RefDestinoMotivoUseCases:
+    def __init__(self, repository: IRefDestinoMotivoRepository):
+        self.repository = repository
+        
+    def count_destinations_by_motivo(self, filters: RefDestinoMotivoFilters) -> int:
+        """Cuenta el total de destinos asociados a un id_motivo específico."""
+        # Obtenemos el total de registros usando una paginación mínima.
+        _, total_records = self.repository.get_paginated_by_motivo(
+            id_motivo=filters.id_motivo, 
+            page=1, 
+            page_size=1
+        )
+        return total_records
+
+    def get_destinations_paginated_by_motivo(self, pagination_params: RefDestinoMotivoPagination) -> List[RefDestinoMotivo]:
+        """Obtiene una lista de destinos paginados por ID de motivo (solo data)."""
+
+        data, _ = self.repository.get_paginated_by_motivo(
+            id_motivo=pagination_params.id_motivo, 
+            page=pagination_params.page, 
+            page_size=pagination_params.page_size
+        )
+        # Solo retornamos la lista de entidades
+        return data

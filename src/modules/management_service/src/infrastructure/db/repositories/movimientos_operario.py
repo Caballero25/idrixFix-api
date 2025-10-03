@@ -6,15 +6,15 @@ from datetime import date, datetime
 from typing import List, Optional, Tuple
 
 # Importaciones de los modelos, entidades, schemas y puertos
-from src.modules.management_service.src.infrastructure.db.models import WorkerMovementORM
-from src.modules.management_service.src.domain.entities import WorkerMovement
+from src.modules.management_service.src.infrastructure.db.models import WorkerMovementORM, RefDestinosMotivosORM, RefMotivosORM
+from src.modules.management_service.src.domain.entities import WorkerMovement, RefMotivo, RefDestinoMotivo
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
     WorkerMovementUpdate,
     WorkerMovementFilters
 )
 from src.modules.management_service.src.application.ports.movimientos_operario import (
-    IWorkerMovementRepository,
+    IWorkerMovementRepository, IRefMotivoRepository, IRefDestinoMotivoRepository
 )
 
 # Importar las excepciones de tu capa de aplicación
@@ -174,3 +174,95 @@ class WorkerMovementRepository(IWorkerMovementRepository):
             return domain_entities, total_records
         except SQLAlchemyError as e:
             raise RepositoryError("Error al obtener movimientos paginados.") from e
+        
+class RefMotivoRepository(IRefMotivoRepository):
+    def __init__(self, db: Session):
+        self.db = db
+        self.ACTIVE_STATUS = "ACTIVO"
+
+    def _to_domain_entity(self, orm_model: RefMotivosORM) -> RefMotivo:
+        """Mapea un objeto ORM a una entidad de Dominio (SIN created_at/updated_at)."""
+        return RefMotivo(
+            id_motivo=orm_model.id_motivo,
+            descripcion=orm_model.descripcion,
+            tipo_motivo=orm_model.tipo_motivo,
+            es_justificado=orm_model.es_justificado,
+            estado=orm_model.estado,
+            # created_at/updated_at eliminados
+        )
+
+    def get_paginated_active(self, page: int, page_size: int) -> Tuple[List[RefMotivo], int]:
+        try:
+            # 1. Base query filtered by estado = 'ACTIVO'
+            base_query = self.db.query(RefMotivosORM).filter(
+                RefMotivosORM.estado == self.ACTIVE_STATUS
+            )
+            
+            # 2. Conteo Total
+            total_records = base_query.count()
+            
+            if total_records == 0:
+                return [], 0
+            
+            # 3. Paginación y Datos (Ordenado por descripción)
+            offset = (page - 1) * page_size
+            orm_list = (
+                base_query
+                .order_by(RefMotivosORM.descripcion.asc())
+                .limit(page_size)
+                .offset(offset)
+                .all()
+            )
+            
+            domain_entities = [self._to_domain_entity(orm) for orm in orm_list]
+            
+            return domain_entities, total_records
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al obtener motivos activos paginados.") from e
+
+
+class RefDestinoMotivoRepository(IRefDestinoMotivoRepository):
+    def __init__(self, db: Session):
+        self.db = db
+        
+    def _to_domain_entity(self, orm_model: RefDestinosMotivosORM) -> RefDestinoMotivo:
+        """Mapea un objeto ORM a una entidad de Dominio (SIN created_at/updated_at)."""
+        return RefDestinoMotivo(
+            id_destino=orm_model.id_destino,
+            id_motivo=orm_model.id_motivo,
+            nombre_destino=orm_model.nombre_destino,
+            descripcion=orm_model.descripcion,
+            estado=orm_model.estado,
+            # created_at/updated_at eliminados
+        )
+
+    def get_paginated_by_motivo(
+        self, id_motivo: int, page: int, page_size: int
+    ) -> Tuple[List[RefDestinoMotivo], int]:
+        try:
+            # 1. Base query filtered by id_motivo
+            base_query = self.db.query(RefDestinosMotivosORM).filter(
+                RefDestinosMotivosORM.id_motivo == id_motivo
+            )
+            
+            # 2. Conteo Total
+            total_records = base_query.count()
+            
+            if total_records == 0:
+                return [], 0
+            
+            # 3. Paginación y Datos (Ordenado por nombre de destino)
+            offset = (page - 1) * page_size
+            orm_list = (
+                base_query
+                .order_by(RefDestinosMotivosORM.nombre_destino.asc())
+                .limit(page_size)
+                .offset(offset)
+                .all()
+            )
+            
+            domain_entities = [self._to_domain_entity(orm) for orm in orm_list]
+            
+            return domain_entities, total_records
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al obtener destinos por motivo paginados.") from e

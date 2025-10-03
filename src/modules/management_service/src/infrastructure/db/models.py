@@ -29,3 +29,22 @@ class WorkerMovementORM(_BaseMain):
     observacion = Column(String(255))
 
     __table_args__ = (Index('idx_fecha_p_linea_operario', 'fecha_p', 'linea', 'codigo_operario'),)
+
+class RefMotivosORM(_BaseMain):
+    __tablename__ = "ref_motivos"
+
+    id_motivo = Column(Integer, primary_key=True, autoincrement=True)
+    descripcion = Column(String(100), nullable=False)
+    tipo_motivo = Column(String(10), nullable=False)
+    es_justificado = Column(Boolean, nullable=False, default=False)
+    estado = Column(String(10), nullable=False, default="ACTIVO")
+
+
+class RefDestinosMotivosORM(_BaseMain):
+    __tablename__ = "ref_destinos_motivos"
+
+    id_destino = Column(Integer, primary_key=True, autoincrement=True)
+    id_motivo = Column(Integer, nullable=False)
+    nombre_destino = Column(String(100), nullable=False)
+    descripcion = Column(String(200), nullable=True)
+    estado = Column(String(10), nullable=False, default="ACTIVO")

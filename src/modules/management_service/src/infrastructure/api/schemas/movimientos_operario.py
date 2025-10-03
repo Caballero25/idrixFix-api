@@ -34,7 +34,7 @@ class WorkerMovementUpdate(BaseModel):
 class WorkerMovementResponse(WorkerMovementBase):
     id: int
     class Config:
-        from_attributes = True # Pydantic V2 (o alias en V1)
+        from_attributes = True
 # Schema para la entrada de filtros (para conteo y paginación)
 class WorkerMovementFilters(BaseModel):
     fecha_inicial: Optional[date] = None
@@ -55,3 +55,52 @@ class WorkerMovementPaginatedResponse(BaseModel):
     page: int
     page_size: int
     data: List[WorkerMovementResponse]
+
+# Schemas de RefMotivo
+class RefMotivoBase(BaseModel):
+    descripcion: str = Field(..., max_length=100)
+    tipo_motivo: str = Field(..., max_length=10)
+    es_justificado: bool = False
+    estado: str = Field("ACTIVO", max_length=10)
+
+class RefMotivoResponse(RefMotivoBase):
+    id_motivo: int
+    class Config:
+        from_attributes = True
+
+# Filtros para Motivos (Solo incluye paginación, el filtro de estado es implícito)
+class RefMotivoFilters(BaseModel):
+    pass 
+
+class RefMotivoPagination(RefMotivoFilters):
+    page: conint(ge=1) = 1
+    page_size: conint(ge=1) = 20
+
+
+# Schemas de RefDestinoMotivo
+class RefDestinoMotivoBase(BaseModel):
+    id_motivo: int = Field(..., ge=1)
+    nombre_destino: str = Field(..., max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=200)
+    estado: str = Field("ACTIVO", max_length=10)
+
+class RefDestinoMotivoResponse(RefDestinoMotivoBase):
+    id_destino: int
+    class Config:
+        from_attributes = True
+
+# Filtros para Destinos por Motivo (Requiere id_motivo)
+class RefDestinoMotivoFilters(BaseModel):
+    id_motivo: int = Field(..., description="ID del motivo para filtrar destinos.", ge=1)
+
+class RefDestinoMotivoPagination(RefDestinoMotivoFilters):
+    page: conint(ge=1) = 1
+    page_size: conint(ge=1) = 20
+    
+    
+# Schema de respuesta para la paginación (Genérico)
+class PaginatedResponse(BaseModel):
+    total_records: int
+    total_pages: int
+    page: int
+    page_size: int
