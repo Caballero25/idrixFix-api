@@ -9,7 +9,6 @@ class PermisoModuloBase(BaseModel):
     id_rol: int = Field(..., gt=0)
     modulo: ModuloEnum
     permisos: List[PermisoEnum] = Field(..., min_items=1)
-    ruta: str = Field(..., min_length=1, max_length=100)
 
 
 class PermisoModuloCreate(PermisoModuloBase):
@@ -20,8 +19,7 @@ class PermisoModuloCreate(PermisoModuloBase):
             "example": {
                 "id_rol": 1,
                 "modulo": "PRODUCCION",
-                "permisos": ["read", "write"],
-                "ruta": "/produccion"
+                "permisos": ["read", "write"]
             }
         }
 
@@ -30,14 +28,12 @@ class PermisoModuloUpdate(BaseModel):
     """Schema para actualizar PermisoModulo"""
     modulo: Optional[ModuloEnum] = None
     permisos: Optional[List[PermisoEnum]] = Field(None, min_items=1)
-    ruta: Optional[str] = Field(None, min_length=1, max_length=100)
     is_active: Optional[bool] = None
 
     class Config:
         json_schema_extra = {
             "example": {
-                "permisos": ["read"],
-                "ruta": "/produccion/reportes"
+                "permisos": ["read"]
             }
         }
 
@@ -58,7 +54,6 @@ class PermisoModuloResponse(PermisoModuloBase):
                 "id_rol": 1,
                 "modulo": "PRODUCCION",
                 "permisos": ["read", "write"],
-                "ruta": "/produccion",
                 "is_active": True,
                 "created_at": "2024-01-01T08:00:00",
                 "updated_at": "2024-01-01T08:00:00",
@@ -84,7 +79,6 @@ class PermisoModuloListResponse(BaseModel):
                         "id_rol": 1,
                         "modulo": "PRODUCCION",
                         "permisos": ["read", "write"],
-                        "ruta": "/produccion",
                         "is_active": True,
                         "created_at": "2024-01-01T08:00:00",
                         "updated_at": "2024-01-01T08:00:00",

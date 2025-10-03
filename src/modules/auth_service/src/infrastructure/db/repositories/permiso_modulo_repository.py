@@ -38,13 +38,25 @@ class PermisoModuloRepository(IPermisoModuloRepository):
             raise RepositoryError("Error al obtener el permiso de módulo.") from e
 
     def get_by_rol_id(self, rol_id: int) -> List[PermisoModulo]:
-        """Obtiene todos los permisos de un rol"""
+        """Obtiene todos los permisos activos de un rol"""
         try:
             return (
                 self.db.query(PermisoModulo)
                 .options(joinedload(PermisoModulo.rol))
                 .filter(PermisoModulo.id_rol == rol_id)
                 .filter(PermisoModulo.is_active == True)
+                .all()
+            )
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al obtener los permisos de módulo.") from e
+
+    def get_all_by_rol_id(self, rol_id: int) -> List[PermisoModulo]:
+        """Obtiene todos los permisos de un rol (activos e inactivos)"""
+        try:
+            return (
+                self.db.query(PermisoModulo)
+                .options(joinedload(PermisoModulo.rol))
+                .filter(PermisoModulo.id_rol == rol_id)
                 .all()
             )
         except SQLAlchemyError as e:
@@ -72,7 +84,6 @@ class PermisoModuloRepository(IPermisoModuloRepository):
             id_rol=permiso_data.id_rol,
             modulo=permiso_data.modulo,
             permisos=permisos_json,
-            ruta=permiso_data.ruta,
             is_active=True,
             created_at=datetime.now(),
             updated_at=datetime.now(),
@@ -90,7 +101,11 @@ class PermisoModuloRepository(IPermisoModuloRepository):
                 .filter(PermisoModulo.id_permiso_modulo == db_permiso.id_permiso_modulo)
                 .first()
             )
+        except IntegrityError as e:
+            self.db.rollback()
+            raise AlreadyExistsError(f"El rol ya tiene permisos asignados para el módulo '{permiso_data.modulo.value}'.") from e
         except SQLAlchemyError as e:
+            self.db.rollback()
             raise RepositoryError("Error al crear el permiso de módulo.") from e
 
     def update(self, permiso_id: int, permiso_data: PermisoModuloUpdate) -> Optional[PermisoModulo]:
@@ -129,7 +144,15 @@ class PermisoModuloRepository(IPermisoModuloRepository):
                 .filter(PermisoModulo.id_permiso_modulo == permiso_id)
                 .first()
             )
+        except IntegrityError as e:
+            self.db.rollback()
+            if "uq_rol_modulo" in str(e.orig).lower() or "unique constraint" in str(e.orig).lower():
+                modulo_value = update_data.get('modulo', db_permiso.modulo)
+                modulo_name = modulo_value.value if hasattr(modulo_value, 'value') else modulo_value
+                raise AlreadyExistsError(f"El rol ya tiene permisos asignados para el módulo '{modulo_name}'.")
+            raise RepositoryError("Error de integridad en la base de datos.") from e
         except SQLAlchemyError as e:
+            self.db.rollback()
             raise RepositoryError("Error al actualizar el permiso de módulo.") from e
 
     def soft_delete(self, permiso_id: int) -> Optional[PermisoModulo]:

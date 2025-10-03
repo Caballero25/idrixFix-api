@@ -58,7 +58,6 @@ class Usuario(_BaseAuth):
                 
                 modulos.append({
                     "nombre": permiso_modulo.modulo.value if hasattr(permiso_modulo.modulo, 'value') else permiso_modulo.modulo,
-                    "ruta": permiso_modulo.ruta,
                     "permisos": permisos_strings
                 })
         
@@ -97,8 +96,6 @@ class PermisoModulo(_BaseAuth):
     # Lista de permisos como JSON (read, write)
     permisos = Column(JSON, nullable=False)
     
-    # Ruta del módulo
-    ruta = Column(String(100), nullable=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
     deleted_at = Column(DateTime, nullable=True)

@@ -7,8 +7,7 @@ from src.modules.auth_service.src.application.ports.sesiones import ISesionRepos
 from src.modules.auth_service.src.infrastructure.api.schemas.auth import LoginRequest
 from src.modules.auth_service.src.infrastructure.api.schemas.sesiones import SesionCreate
 from src.modules.auth_service.src.domain.value_objects import Password, Token, UserSession, ModuloInfo, PermisosList
-from src.shared.exceptions import DomainError
-import secrets
+from src.shared.exceptions import NotFoundError, ValidationError, RepositoryError
 
 
 class AuthUseCase:
@@ -30,20 +29,20 @@ class AuthUseCase:
             # Buscar usuario por username
             usuario = self.usuario_repository.get_by_username(login_data.username)
             if not usuario:
-                raise DomainError("Credenciales inválidas")
+                raise ValidationError("Credenciales inválidas.")
 
             # Verificar que el usuario esté activo
             if not usuario.is_active:
-                raise DomainError("Usuario inactivo")
+                raise ValidationError("Usuario inactivo.")
 
             # Verificar password
             if not Password.verify(login_data.password, usuario.password_hash):
-                raise DomainError("Credenciales inválidas")
+                raise ValidationError("Credenciales inválidas.")
 
             # Obtener rol con permisos
             rol = self.rol_repository.get_with_permisos(usuario.id_rol)
             if not rol or not rol.is_active:
-                raise DomainError("Rol inválido o inactivo")
+                raise NotFoundError("Rol inválido o inactivo.")
 
             # Generar token JWT primero sin session_id
             token = Token.generate(
@@ -51,8 +50,7 @@ class AuthUseCase:
                     "sub": str(usuario.id_usuario),  # Subject (user ID) - estándar JWT
                     "username": usuario.username,
                     "user_id": usuario.id_usuario,  # Mantener para compatibilidad
-                },
-                expiration_minutes=60
+                }
             )
             
             # Crear sesión con el token JWT
@@ -73,8 +71,7 @@ class AuthUseCase:
                     "username": usuario.username,
                     "user_id": usuario.id_usuario,  # Mantener para compatibilidad
                     "session_id": sesion.id_sesion
-                },
-                expiration_minutes=60
+                }
             )
             
             # Actualizar sesión con el token final
@@ -96,7 +93,6 @@ class AuthUseCase:
 
                     modulos.append(ModuloInfo(
                         nombre=nombre_modulo,
-                        ruta=permiso_modulo.ruta,
                         permisos=PermisosList(permisos_lista)
                     ))
 
@@ -111,7 +107,7 @@ class AuthUseCase:
             return user_session.to_response_dict()
         except Exception as e:
             print("Error al autenticar usuario:", e)
-            raise DomainError("Error al autenticar usuario")
+            raise RepositoryError("Error al autenticar usuario.") from e
 
     def logout(self, token: str) -> bool:
         """Cierra sesión invalidando el token"""
@@ -155,7 +151,6 @@ class AuthUseCase:
 
                 modulos.append({
                     "nombre": nombre_modulo,
-                    "ruta": permiso_modulo.ruta,
                     "permisos": permisos_lista
                 })
 
@@ -185,8 +180,7 @@ class AuthUseCase:
                 "sub": str(user_info["user_id"]),  # Subject (user ID) - estándar JWT
                 "username": user_info["username"],
                 "user_id": user_info["user_id"]  # Mantener para compatibilidad
-            },
-            expiration_minutes=60
+            }
         )
 
         sesion_data = SesionCreate(

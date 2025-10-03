@@ -131,12 +131,9 @@ def assign_permisos_to_rol(
     rol_use_case: RolUseCase = Depends(get_rol_use_case)
 ):
     """Asigna permisos a un rol"""
-    success = rol_use_case.assign_permisos_to_rol(rol_id, permisos_data.permisos)
-    if not success:
-        return error_response(
-            message="Error al asignar permisos",
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+    # Convertir los objetos Pydantic a diccionarios
+    permisos_list = [p.model_dump() for p in permisos_data.permisos]
+    rol_use_case.assign_permisos_to_rol(rol_id, permisos_list)
     return success_response(
         data={"permisos_asignados": True, "rol_id": rol_id},
         message="Permisos asignados exitosamente"

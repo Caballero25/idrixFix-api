@@ -88,13 +88,13 @@ class Token:
         return bool(self.value) and not self.is_expired()
 
     @classmethod
-    def generate(cls, payload: dict, expiration_minutes: int = 60) -> "Token":
+    def generate(cls, payload: dict) -> "Token":
         """Genera un nuevo token JWT"""
         import jwt
         from src.shared.config import settings
         
         # Calcular fecha de expiración
-        expires_at = datetime.now() + timedelta(minutes=expiration_minutes)
+        expires_at = datetime.now() + timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
         
         # Agregar campos estándar de JWT
         jwt_payload = {
@@ -107,8 +107,8 @@ class Token:
         # Generar JWT real
         token_data = jwt.encode(
             jwt_payload,
-            settings.SECRET_KEY,
-            algorithm=settings.ALGORITHM
+            settings.JWT_SECRET_KEY,
+            algorithm=settings.JWT_ALGORITHM
         )
         
         return cls(value=token_data, expires_at=expires_at)
@@ -145,21 +145,16 @@ class PermisosList:
 class ModuloInfo:
     """Value object para información de módulo"""
     nombre: str
-    ruta: str
     permisos: PermisosList
 
     def __post_init__(self):
-        if not self.nombre or not self.ruta:
-            raise ValueError("Nombre y ruta son requeridos")
-        
-        if not self.ruta.startswith('/'):
-            raise ValueError("La ruta debe comenzar con '/'")
+        if not self.nombre:
+            raise ValueError("Nombre es requerido")
 
     def to_dict(self) -> dict:
         """Convierte a diccionario para respuesta JSON"""
         return {
             "nombre": self.nombre,
-            "ruta": self.ruta,
             "permisos": self.permisos.permisos
         }
 

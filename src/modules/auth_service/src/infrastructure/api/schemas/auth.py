@@ -37,12 +37,10 @@ class LoginResponse(BaseModel):
                     "modulos": [
                         {
                             "nombre": "PRODUCCION",
-                            "ruta": "/produccion",
                             "permisos": ["read", "write"]
                         },
                         {
                             "nombre": "INVENTARIO",
-                            "ruta": "/inventario",
                             "permisos": ["read"]
                         }
                     ]
@@ -73,7 +71,6 @@ class TokenVerifyResponse(BaseModel):
                     "modulos": [
                         {
                             "nombre": "PRODUCCION",
-                            "ruta": "/produccion",
                             "permisos": ["read", "write"]
                         }
                     ]

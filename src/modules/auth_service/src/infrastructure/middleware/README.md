@@ -257,7 +257,6 @@ El objeto `Usuario` retornado por las dependencias incluye:
     "permisos_modulos": [
         {
             "nombre": "INVENTARIO",
-            "ruta": "/inventario",
             "permisos": ["read", "write"]
         }
     ]

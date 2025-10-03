@@ -114,7 +114,6 @@ class PermisoModulo:
     id_rol: int = 0
     modulo: ModuloEnum = ModuloEnum.PRODUCCION
     permisos: List[PermisoEnum] = None
-    ruta: str = ""
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -157,7 +156,6 @@ class PermisoModulo:
         return (
             self.id_rol > 0
             and self.modulo is not None
-            and bool(self.ruta.strip())
             and self.permisos is not None
             and len(self.permisos) > 0
         )
@@ -197,10 +195,10 @@ class SesionUsuario:
             
         return True
 
-    def renovar_expiracion(self, minutos: int = 60) -> None:
+    def renovar_expiracion(self) -> None:
         """Renueva la fecha de expiración de la sesión"""
         from datetime import timedelta
-        self.fecha_expiracion = datetime.now() + timedelta(minutes=minutos)
+        self.fecha_expiracion = datetime.now() + timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
 
     def validar_datos_basicos(self) -> bool:
         """Valida que los datos básicos de la sesión sean correctos"""

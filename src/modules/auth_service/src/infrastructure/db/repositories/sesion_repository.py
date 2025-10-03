@@ -4,8 +4,8 @@ from src.modules.auth_service.src.application.ports.sesiones import ISesionRepos
 from src.modules.auth_service.src.infrastructure.api.schemas.sesiones import SesionCreate
 from src.modules.auth_service.src.infrastructure.db.models import SesionUsuario
 from datetime import datetime
-from src.shared.exceptions import RepositoryError 
-from sqlalchemy.exc import SQLAlchemyError
+from src.shared.exceptions import AlreadyExistsError, RepositoryError 
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 class SesionRepository(ISesionRepository):
@@ -87,16 +87,23 @@ class SesionRepository(ISesionRepository):
             updated_at=datetime.now(),
         )
         
-        self.db.add(db_sesion)
-        self.db.commit()
-        self.db.refresh(db_sesion)
-        
-        return (
-            self.db.query(SesionUsuario)
-            .options(joinedload(SesionUsuario.usuario))
-            .filter(SesionUsuario.id_sesion == db_sesion.id_sesion)
-            .first()
-        )
+        try:
+            self.db.add(db_sesion)
+            self.db.commit()
+            self.db.refresh(db_sesion)
+            
+            return (
+                self.db.query(SesionUsuario)
+                .options(joinedload(SesionUsuario.usuario))
+                .filter(SesionUsuario.id_sesion == db_sesion.id_sesion)
+                .first()
+            )
+        except IntegrityError as e:
+            self.db.rollback()
+            raise AlreadyExistsError("El token de sesión ya existe.") from e
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise RepositoryError("Error al crear la sesión.") from e
 
     def update(self, sesion_id: int, update_data: dict) -> Optional[SesionUsuario]:
         """Actualiza una sesión existente"""

@@ -75,12 +75,10 @@ class UsuarioResponse(UsuarioBase):
                 "permisos_modulos": [
                     {
                         "nombre": "PRODUCCION",
-                        "ruta": "/produccion",
                         "permisos": ["read", "write"]
                     },
                     {
-                        "nombre": "INVENTARIO", 
-                        "ruta": "/inventario",
+                        "nombre": "INVENTARIO",
                         "permisos": ["read"]
                     }
                 ]

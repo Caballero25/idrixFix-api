@@ -59,7 +59,7 @@ class RolRepository(IRolRepository):
             return db_rol
         except IntegrityError as e:
             self.db.rollback()
-            raise AlreadyExistsError("El rol ya existe.") from e
+            raise AlreadyExistsError(f"Ya existe un rol con el nombre '{rol_data.nombre}'.") from e
         except SQLAlchemyError as e:
             self.db.rollback()
             raise RepositoryError("Error al crear el rol.") from e
@@ -68,7 +68,8 @@ class RolRepository(IRolRepository):
         try:
             db_rol = self.db.query(Rol).filter(Rol.id_rol == rol_id).first()
         except SQLAlchemyError as e:
-            raise RepositoryError("Error al actualizar el rol.") from e
+            raise RepositoryError("Error al buscar el rol.") from e
+        
         if not db_rol:
             return None
 
@@ -80,10 +81,18 @@ class RolRepository(IRolRepository):
             if hasattr(db_rol, field):
                 setattr(db_rol, field, value)
 
-        self.db.commit()
-        self.db.refresh(db_rol)
-        
-        return db_rol
+        try:
+            self.db.commit()
+            self.db.refresh(db_rol)
+            return db_rol
+        except IntegrityError as e:
+            self.db.rollback()
+            if "unique constraint" in str(e.orig).lower() or "uq_" in str(e.orig).lower() or "nombre" in str(e.orig).lower():
+                raise AlreadyExistsError(f"Ya existe un rol con el nombre '{rol_data.nombre}'.")
+            raise RepositoryError("Error de integridad en la base de datos.") from e
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise RepositoryError("Error al actualizar el rol.") from e
 
     def soft_delete(self, rol_id: int) -> Optional[Rol]:
         from sqlalchemy.sql import func

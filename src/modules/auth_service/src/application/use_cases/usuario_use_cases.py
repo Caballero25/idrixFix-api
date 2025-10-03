@@ -4,7 +4,7 @@ from src.modules.auth_service.src.application.ports.roles import IRolRepository
 from src.modules.auth_service.src.infrastructure.api.schemas.usuarios import UsuarioCreate, UsuarioUpdate
 from src.modules.auth_service.src.infrastructure.db.models import Usuario
 from src.modules.auth_service.src.domain.value_objects import Password, Username
-from src.shared.exceptions import DomainError
+from src.shared.exceptions import AlreadyExistsError, NotFoundError, ValidationError
 
 
 class UsuarioUseCase:
@@ -29,26 +29,26 @@ class UsuarioUseCase:
         # Validar que el username no exista
         existing_user = self.usuario_repository.get_by_username(usuario_data.username)
         if existing_user:
-            raise DomainError("El username ya existe")
+            raise AlreadyExistsError(f"El usuario '{usuario_data.username}' ya existe.")
 
         # Validar formato de username
         try:
             Username(usuario_data.username)
         except ValueError as e:
-            raise DomainError(str(e))
+            raise ValidationError(str(e))
 
         # Validar y hashear password
         try:
             password = Password(usuario_data.password)
             usuario_data.password_hash = password.hash()
         except ValueError as e:
-            raise DomainError(str(e))
+            raise ValidationError(str(e))
 
         # Validar que el rol exista
         if usuario_data.id_rol:
             rol = self.rol_repository.get_by_id(usuario_data.id_rol)
             if not rol or not rol.is_active:
-                raise DomainError("Rol inválido")
+                raise NotFoundError(f"Rol con id={usuario_data.id_rol} no encontrado o inactivo.")
 
         return self.usuario_repository.create(usuario_data)
 
@@ -57,18 +57,18 @@ class UsuarioUseCase:
         # Verificar que el usuario existe
         existing_user = self.usuario_repository.get_by_id(usuario_id)
         if not existing_user:
-            raise DomainError("Usuario no encontrado")
+            raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
 
         # Si se actualiza username, verificar que no exista
         if usuario_data.username and usuario_data.username != existing_user.username:
             username_exists = self.usuario_repository.get_by_username(usuario_data.username)
             if username_exists:
-                raise DomainError("El username ya existe")
+                raise AlreadyExistsError(f"El usuario '{usuario_data.username}' ya existe.")
             
             try:
                 Username(usuario_data.username)
             except ValueError as e:
-                raise DomainError(str(e))
+                raise ValidationError(str(e))
 
 
         # Si se actualiza password, validar y hashear
@@ -77,13 +77,13 @@ class UsuarioUseCase:
                 password = Password(usuario_data.password)
                 usuario_data.password_hash = password.hash()
             except ValueError as e:
-                raise DomainError(str(e))
+                raise ValidationError(str(e))
 
         # Si se actualiza rol, verificar que exista
         if usuario_data.id_rol:
             rol = self.rol_repository.get_by_id(usuario_data.id_rol)
             if not rol or not rol.is_active:
-                raise DomainError("Rol inválido")
+                raise NotFoundError(f"Rol con id={usuario_data.id_rol} no encontrado o inactivo.")
 
         return self.usuario_repository.update(usuario_id, usuario_data)
 
@@ -91,7 +91,7 @@ class UsuarioUseCase:
         """Elimina (desactiva) un usuario"""
         usuario = self.usuario_repository.get_by_id(usuario_id)
         if not usuario:
-            raise DomainError("Usuario no encontrado")
+            raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
 
         return self.usuario_repository.soft_delete(usuario_id)
 
@@ -99,10 +99,10 @@ class UsuarioUseCase:
         """Activa un usuario"""
         usuario = self.usuario_repository.get_by_id(usuario_id)
         if not usuario:
-            raise DomainError("Usuario no encontrado")
+            raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
 
         if usuario.is_active:
-            raise DomainError("El usuario ya está activo")
+            raise ValidationError("El usuario ya está activo.")
 
         # Crear datos de actualización para activar
         update_data = UsuarioUpdate(is_active=True)
@@ -112,18 +112,18 @@ class UsuarioUseCase:
         """Cambia la contraseña de un usuario"""
         usuario = self.usuario_repository.get_by_id(usuario_id)
         if not usuario:
-            raise DomainError("Usuario no encontrado")
+            raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
 
         # Verificar contraseña actual
         if not Password.verify(current_password, usuario.password_hash):
-            raise DomainError("Contraseña actual incorrecta")
+            raise ValidationError("Contraseña actual incorrecta.")
 
         # Validar nueva contraseña
         try:
             new_password_obj = Password(new_password)
             password_hash = new_password_obj.hash()
         except ValueError as e:
-            raise DomainError(str(e))
+            raise ValidationError(str(e))
 
         # Actualizar contraseña
         update_data = UsuarioUpdate(password_hash=password_hash)

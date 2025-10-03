@@ -11,6 +11,9 @@ No crea dependencias circulares porque solo importa, no exporta
 from src.modules.management_service.src.infrastructure.db.models import (
     WorkerMovementORM
 )
+from src.modules.auth_service.src.infrastructure.db.models import (
+    Usuario, Rol, PermisoModulo, SesionUsuario
+)
 
 # Este archivo solo importa para registrar los modelos
 # Los microservicios NO deben importar desde aquí

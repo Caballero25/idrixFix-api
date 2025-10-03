@@ -73,12 +73,10 @@ class RolWithPermisosResponse(RolResponse):
                 "modulos": [
                     {
                         "nombre": "PRODUCCION",
-                        "ruta": "/produccion",
                         "permisos": ["read", "write"]
                     },
                     {
                         "nombre": "INVENTARIO",
-                        "ruta": "/inventario",
                         "permisos": ["read", "write"]
                     }
                 ]
@@ -86,9 +84,18 @@ class RolWithPermisosResponse(RolResponse):
         }
 
 
+class PermisoAsignacion(BaseModel):
+    """Schema para un permiso individual a asignar"""
+    modulo: str = Field(..., description="Nombre del módulo")
+    permisos: List[str] = Field(..., min_items=1, description="Lista de permisos")
+    
+    class Config:
+        extra = "forbid"  # No permitir campos adicionales
+
+
 class AsignPermisosRequest(BaseModel):
     """Schema para asignar permisos a un rol"""
-    permisos: List[Dict[str, Any]] = Field(..., min_items=1)
+    permisos: List[PermisoAsignacion] = Field(..., min_items=1)
 
     class Config:
         json_schema_extra = {
@@ -96,12 +103,10 @@ class AsignPermisosRequest(BaseModel):
                 "permisos": [
                     {
                         "modulo": "PRODUCCION",
-                        "ruta": "/produccion",
                         "permisos": ["read", "write"]
                     },
                     {
                         "modulo": "INVENTARIO",
-                        "ruta": "/inventario",
                         "permisos": ["read"]
                     }
                 ]
@@ -119,12 +124,10 @@ class ModulosDisponiblesResponse(BaseModel):
                 "modulos": [
                     {
                         "nombre": "PRODUCCION",
-                        "ruta": "/produccion",
                         "permisos_disponibles": ["read", "write"]
                     },
                     {
                         "nombre": "INVENTARIO",
-                        "ruta": "/inventario",
                         "permisos_disponibles": ["read", "write"]
                     }
                 ]

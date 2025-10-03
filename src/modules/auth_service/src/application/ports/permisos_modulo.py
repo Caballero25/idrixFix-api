@@ -23,6 +23,10 @@ class IPermisoModuloRepository(ABC):
         pass
 
     @abstractmethod
+    def get_all_by_rol_id(self, rol_id: int) -> List[PermisoModulo]:
+        pass
+
+    @abstractmethod
     def get_by_rol_and_modulo(self, rol_id: int, modulo: ModuloEnum) -> Optional[PermisoModulo]:
         pass
 
