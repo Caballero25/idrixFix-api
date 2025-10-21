@@ -2,12 +2,14 @@ from sqlalchemy import (
     Column,
     String,
     BigInteger,
+    Integer,
     Boolean,
     DateTime,
     Text,
     JSON,
     ForeignKey,
     UniqueConstraint,
+    ForeignKeyConstraint,
     Enum as SQLEnum,
 )
 from sqlalchemy.orm import relationship
@@ -15,6 +17,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from src.shared.database import _BaseAuth
 from src.modules.auth_service.src.domain.entities import ModuloEnum, PermisoEnum
 import enum
+import datetime
 
 
 class Usuario(_BaseAuth):
@@ -39,6 +42,8 @@ class Usuario(_BaseAuth):
     # Relación uno-a-muchos: Un usuario puede tener muchas sesiones
     sesiones = relationship("SesionUsuario", back_populates="usuario")
     
+    # Relación uno-a-muchos: Un usuario puede tener muchas líneas asignadas
+    lineas_asignadas = relationship("UsuarioLineaAsignada", back_populates="usuario")
     @hybrid_property
     def permisos_modulos(self):
         """Obtiene los permisos por módulo del usuario basado en su rol"""
@@ -131,3 +136,28 @@ class SesionUsuario(_BaseAuth):
     
     # Relación muchos-a-uno: Una sesión pertenece a un usuario
     usuario = relationship("Usuario", back_populates="sesiones")
+
+class UsuarioLineaAsignada(_BaseAuth):
+    """
+    Tabla de unión que asigna líneas de trabajo (de la DB externa) 
+    a los usuarios (de la DB interna).
+    """
+    __tablename__ = "usuario_lineas_asignadas"
+    
+    id_usuario_linea = Column(BigInteger, primary_key=True)
+    
+    # 1. Relación con tu Usuario interno
+    id_usuario = Column(BigInteger, ForeignKey("usuarios.id_usuario"), nullable=False)
+    
+    # 2. ID de la línea de trabajo externa (¡NO es una FK de base de datos!)
+    id_linea_externa = Column(Integer, nullable=False) 
+    
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now())
+    
+    # Relación para que SQLAlchemy la entienda
+    usuario = relationship("Usuario", back_populates="lineas_asignadas")
+    
+    # Constraint para evitar duplicados
+    __table_args__ = (
+        UniqueConstraint("id_usuario", "id_linea_externa", name="uq_usuario_linea_externa"),
+    )

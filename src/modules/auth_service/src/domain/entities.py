@@ -6,12 +6,11 @@ from enum import Enum
 
 class ModuloEnum(Enum):
     """Enum para los módulos disponibles en el sistema"""
-    PRODUCCION = "PRODUCCION"
-    INVENTARIO = "INVENTARIO"
-    EMPLEADOS = "EMPLEADOS"
-    PLANTA = "PLANTA"
-    REPORTES = "REPORTES"
     CONFIGURACION = "CONFIGURACION"
+    USUARIOS = "USUARIOS"
+    ROLES = "ROLES"
+    MARCACION = "MARCACION"
+    MOVIMIENTOS = "MOVIMIENTOS"
 
 
 class PermisoEnum(Enum):
@@ -208,3 +207,12 @@ class SesionUsuario:
             and self.fecha_inicio is not None
             and self.fecha_expiracion is not None
         )
+
+@dataclass
+class UsuarioLineaAsignada:
+    """Entidad para la asignación de líneas a usuarios"""
+    id_usuario_linea: Optional[int] = None
+    id_usuario: int = 0
+    id_linea_externa: int = 0  # O str, si el ID externo es un string
+    created_at: Optional[datetime] = None
+    usuario: Optional["Usuario"] = None
