@@ -111,7 +111,7 @@ class PermisoModulo:
     """Entidad que relaciona roles con módulos y sus permisos"""
     id_permiso_modulo: Optional[int] = None
     id_rol: int = 0
-    modulo: ModuloEnum = ModuloEnum.PRODUCCION
+    modulo: ModuloEnum = ModuloEnum.CONFIGURACION
     permisos: List[PermisoEnum] = None
     is_active: bool = True
     created_at: Optional[datetime] = None
