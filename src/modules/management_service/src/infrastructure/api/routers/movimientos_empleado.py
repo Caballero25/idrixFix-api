@@ -105,10 +105,11 @@ def update_movement_controller(
 # 2. Controlador para ELIMINAR (DELETE - Hard Delete)
 @router.delete("/{movement_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_movement_controller(
-    movement_id: int, use_cases: WorkerMovementUseCases = Depends(get_movement_use_cases)
+    movement_id: int, use_cases: WorkerMovementUseCases = Depends(get_movement_use_cases),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     try:
-        use_cases.delete_movement(movement_id)
+        use_cases.delete_movement(movement_id, user_data)
         # El código 204 indica que la petición fue exitosa y no hay contenido a retornar
         return success_response(
             data=None,
