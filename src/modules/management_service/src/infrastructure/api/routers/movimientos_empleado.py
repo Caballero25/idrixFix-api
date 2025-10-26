@@ -28,13 +28,15 @@ from src.modules.management_service.src.infrastructure.api.schemas.movimientos_o
     RefDestinoMotivoFilters,
     RefMotivoFilters
 )
+from src.shared.common.auditoria import get_audit_use_case
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
 
 router = APIRouter()
 
 # Definir la función de dependencia para los nuevos casos de uso
-def get_movement_use_cases(db: Session = Depends(get_db)) -> WorkerMovementUseCases:
+def get_movement_use_cases(db: Session = Depends(get_db), audit_uc: AuditUseCase = Depends(get_audit_use_case)) -> WorkerMovementUseCases:
     repository = WorkerMovementRepository(db)
-    return WorkerMovementUseCases(repository)
+    return WorkerMovementUseCases(repository, audit_uc)
 def get_ref_motivo_use_cases(db: Session = Depends(get_db)) -> RefMotivoUseCases:
     repository = RefMotivoRepository(db)
     return RefMotivoUseCases(repository)
@@ -48,8 +50,9 @@ def get_ref_destino_motivo_use_cases(db: Session = Depends(get_db)) -> RefDestin
 def create_movement(
     movement_data: WorkerMovementCreate,
     use_cases: WorkerMovementUseCases = Depends(get_movement_use_cases),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
-    new_data = use_cases.create_movement(movement_data)
+    new_data = use_cases.create_movement(movement_data, user_data)
     return success_response(
         data=WorkerMovementResponse.model_validate(new_data).model_dump(mode="json"),
         message="Movimiento creado",
@@ -81,9 +84,10 @@ def update_movement_controller(
     movement_id: int,
     movement_data: WorkerMovementUpdate,
     use_cases: WorkerMovementUseCases = Depends(get_movement_use_cases),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     try:
-        updated_data = use_cases.update_movement(movement_id, movement_data)
+        updated_data = use_cases.update_movement(movement_id, movement_data, user_data)
         return success_response(
             data=WorkerMovementResponse.model_validate(updated_data).model_dump(mode="json"),
             message="Movimiento actualizado",

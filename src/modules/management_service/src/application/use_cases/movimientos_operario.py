@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any # <-- Añadido Dict y Any
 from datetime import date, datetime
 from math import ceil
+from src.shared.exceptions import NotFoundError
 
 # Importar el puerto y los schemas
 from src.modules.management_service.src.application.ports.movimientos_operario import (
@@ -22,10 +23,13 @@ from src.modules.management_service.src.infrastructure.api.schemas.movimientos_o
 from src.modules.management_service.src.domain.entities import WorkerMovement, RefMotivo, RefDestinoMotivo
 
 
-class WorkerMovementUseCases:
-    def __init__(self, repository: IWorkerMovementRepository):
-        self.repository = repository
+# Importar el CASO DE USO de auditoría del otro módulo
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
 
+class WorkerMovementUseCases:
+    def __init__(self, repository: IWorkerMovementRepository, audit_use_case: AuditUseCase):
+        self.repository = repository
+        self.audit_use_case = audit_use_case
     def get_movement_by_id(self, movement_id: int) -> Optional[WorkerMovement]:
         return self.repository.get_by_id(movement_id)
 
@@ -34,13 +38,47 @@ class WorkerMovementUseCases:
     ) -> List[WorkerMovement]:
         return self.repository.get_all_by_date(start_date, end_date)
 
-    def create_movement(self, movement_data: WorkerMovementCreate) -> WorkerMovement:
-        return self.repository.create(movement_data)
+    def create_movement(self, movement_data: WorkerMovementCreate, user_data: Dict[str, Any]) -> WorkerMovement:
+        new_movement = self.repository.create(movement_data)
+        self.audit_use_case.log_action(
+            accion="CREATE",
+            user_id=user_data.get("user_id"),
+            modelo="WorkerMovementORM",
+            entidad_id=new_movement.id,
+            datos_nuevos=movement_data.model_dump(mode="json")
+        )
+        return new_movement
 
     def update_movement(
-        self, movement_id: int, movement_data: WorkerMovementUpdate
-    ) -> Optional[WorkerMovement]:
-        return self.repository.update(movement_id, movement_data)
+            self, 
+            movement_id: int, 
+            movement_data: WorkerMovementUpdate,
+            user_data: Dict[str, Any] # <-- Nuevo
+        ) -> Optional[WorkerMovement]:
+            
+            # 1. Obtener datos "antes" (desde la entidad de dominio)
+            old_movement_entity = self.repository.get_by_id(movement_id)
+            if not old_movement_entity:
+                raise NotFoundError(f"Movimiento con id={movement_id} no encontrado.")
+            
+            # Convertir entidad de dataclass a dict para el log
+            datos_anteriores = WorkerMovementResponse.model_validate(old_movement_entity).model_dump(mode="json")
+            
+            # 2. Actualizar el registro
+            updated_movement = self.repository.update(movement_id, movement_data)
+
+            # 3. Registrar en auditoría
+            self.audit_use_case.log_action(
+                accion="UPDATE",
+                user_id=user_data.get("user_id"),
+                modelo="WorkerMovementORM",
+                entidad_id=movement_id,
+                datos_nuevos=movement_data.model_dump(exclude_unset=True, mode="json"),
+                datos_anteriores=datos_anteriores
+            )
+            
+            # 4. Retornar
+            return updated_movement
 
     def delete_movement(self, movement_id: int) -> bool:
         return self.repository.delete(movement_id)

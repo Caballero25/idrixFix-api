@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Enum as SQLEnum,
 )
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from src.shared.database import _BaseAuth, _BaseMain
@@ -167,6 +168,30 @@ class UsuarioLineaAsignada(_BaseAuth):
     __table_args__ = (
         UniqueConstraint("id_usuario", "id_linea_externa", name="uq_usuario_linea_externa"),
     )
+
+class AuditoriaLogORM(_BaseAuth):
+    """
+    Tabla para registrar logs de auditoría de creación y actualización
+    de registros en ambas bases de datos.
+    """
+    __tablename__ = "auditoria_logs"
+    
+    log_id = Column(BigInteger, primary_key=True)
+    modelo = Column(String(100), nullable=False, index=True) # ej. "WorkerMovementORM"
+    entidad_id = Column(String(100), nullable=False, index=True) # El ID del registro afectado
+    accion = Column(String(50), nullable=False, index=True) # "CREATE", "UPDATE"
+    
+    # JSON para los datos
+    datos_anteriores = Column(JSON, nullable=True) # Null en CREATE
+    datos_nuevos = Column(JSON, nullable=True)
+    
+    # Quién lo hizo (ID y JSON snapshot)
+    ejecutado_por_id = Column(BigInteger, ForeignKey("usuarios.id_usuario"), nullable=True)
+    ejecutado_por_json = Column(JSON, nullable=True)
+    
+    fecha = Column(DateTime, nullable=False, default=datetime.datetime.now())
+    
+    usuario = relationship("Usuario")
 
 
 ## LINEAS 
