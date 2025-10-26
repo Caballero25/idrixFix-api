@@ -80,8 +80,21 @@ class WorkerMovementUseCases:
             # 4. Retornar
             return updated_movement
 
-    def delete_movement(self, movement_id: int) -> bool:
-        return self.repository.delete(movement_id)
+    def delete_movement(self, movement_id: int, user_data: Dict[str, Any]) -> bool:
+        old_movement_entity = self.repository.get_by_id(movement_id)
+        if not old_movement_entity:
+            raise NotFoundError(f"Movimiento con id={movement_id} no encontrado.")
+        datos_anteriores = WorkerMovementResponse.model_validate(old_movement_entity).model_dump(mode="json")
+        delete_movement = self.repository.delete(movement_id)
+
+        self.audit_use_case.log_action(
+            accion="DELETE",
+            user_id=user_data.get("user_id"),
+            modelo="WorkerMovementORM",
+            entidad_id=movement_id,
+            datos_anteriores=datos_anteriores
+        )
+        return delete_movement
 
     def count_movements_by_filters(
         self, filters: WorkerMovementFilters, allowed_lines: List[int]
