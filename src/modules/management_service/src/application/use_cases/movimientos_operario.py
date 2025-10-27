@@ -43,7 +43,7 @@ class WorkerMovementUseCases:
         self.audit_use_case.log_action(
             accion="CREATE",
             user_id=user_data.get("user_id"),
-            modelo="WorkerMovementORM",
+            modelo="fm_movimientos_operarios",
             entidad_id=new_movement.id,
             datos_nuevos=movement_data.model_dump(mode="json")
         )
@@ -71,7 +71,7 @@ class WorkerMovementUseCases:
             self.audit_use_case.log_action(
                 accion="UPDATE",
                 user_id=user_data.get("user_id"),
-                modelo="WorkerMovementORM",
+                modelo="fm_movimientos_operarios",
                 entidad_id=movement_id,
                 datos_nuevos=movement_data.model_dump(exclude_unset=True, mode="json"),
                 datos_anteriores=datos_anteriores
@@ -90,7 +90,7 @@ class WorkerMovementUseCases:
         self.audit_use_case.log_action(
             accion="DELETE",
             user_id=user_data.get("user_id"),
-            modelo="WorkerMovementORM",
+            modelo="fm_movimientos_operarios",
             entidad_id=movement_id,
             datos_anteriores=datos_anteriores
         )
