@@ -11,6 +11,7 @@ class ModuloEnum(Enum):
     ROLES = "ROLES"
     MARCACION = "MARCACION"
     MOVIMIENTOS = "MOVIMIENTOS"
+    AUDITORIA = "AUDITORIA"
 
 
 class PermisoEnum(Enum):

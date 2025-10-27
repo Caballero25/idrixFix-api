@@ -39,7 +39,7 @@ def get_total_logs_by_filters(
             message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     except Exception as e:
-         return error_response(message=str(e), detail=traceback.format_exc(), status_code=500)
+         return error_response(message=str(e), status_code=500)
 
 
 @router.post("/paginated", status_code=status.HTTP_200_OK)
@@ -76,4 +76,4 @@ def get_logs_paginated(
             message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     except Exception as e:
-         return error_response(message=str(e), detail=traceback.format_exc(), status_code=500)
+         return error_response(message=str(e), status_code=500)
