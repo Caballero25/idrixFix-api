@@ -1,11 +1,13 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from src.modules.auth_service.src.application.ports.roles import IRolRepository
 from src.modules.auth_service.src.application.ports.permisos_modulo import IPermisoModuloRepository
-from src.modules.auth_service.src.infrastructure.api.schemas.roles import RolCreate, RolUpdate
+from src.modules.auth_service.src.infrastructure.api.schemas.roles import RolCreate, RolUpdate, RolResponse
 from src.modules.auth_service.src.infrastructure.api.schemas.permisos_modulo import PermisoModuloCreate
 from src.modules.auth_service.src.infrastructure.db.models import Rol
 from src.modules.auth_service.src.domain.entities import ModuloEnum, PermisoEnum
 from src.shared.exceptions import AlreadyExistsError, NotFoundError, ValidationError
+
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
 
 
 class RolUseCase:
@@ -13,9 +15,11 @@ class RolUseCase:
         self,
         rol_repository: IRolRepository,
         permiso_repository: IPermisoModuloRepository,
+        audit_use_case: AuditUseCase
     ):
         self.rol_repository = rol_repository
         self.permiso_repository = permiso_repository
+        self.audit_use_case = audit_use_case
 
     def get_all_roles(self) -> List[Rol]:
         """Obtiene todos los roles"""
@@ -29,7 +33,7 @@ class RolUseCase:
         """Obtiene un rol con sus permisos"""
         return self.rol_repository.get_with_permisos(rol_id)
 
-    def create_rol(self, rol_data: RolCreate) -> Rol:
+    def create_rol(self, rol_data: RolCreate, user_data: Dict[str, Any]) -> Rol:
         """Crea un nuevo rol"""
         # Validar que el nombre no exista
         existing_rol = self.rol_repository.get_by_nombre(rol_data.nombre)
@@ -39,15 +43,25 @@ class RolUseCase:
         # Validar datos básicos
         if not rol_data.nombre or len(rol_data.nombre.strip()) < 2:
             raise ValidationError("El nombre del rol debe tener al menos 2 caracteres.")
+        
+        new_rol = self.rol_repository.create(rol_data)
+        self.audit_use_case.log_action(
+            accion="CREATE",
+            user_id=user_data.get("user_id"),
+            modelo="roles",
+            entidad_id=new_rol.id_rol,
+            datos_nuevos=rol_data.model_dump(mode="json")
+        )
 
-        return self.rol_repository.create(rol_data)
+        return new_rol
 
-    def update_rol(self, rol_id: int, rol_data: RolUpdate) -> Optional[Rol]:
+    def update_rol(self, rol_id: int, rol_data: RolUpdate, user_data: Dict[str, Any]) -> Optional[Rol]:
         """Actualiza un rol existente"""
         # Verificar que el rol existe
         existing_rol = self.rol_repository.get_by_id(rol_id)
         if not existing_rol:
             raise NotFoundError(f"Rol con id={rol_id} no encontrado.")
+        datos_anteriores = RolResponse.model_validate(existing_rol).model_dump(mode="json")
 
         # Si se actualiza el nombre, verificar que no exista
         if rol_data.nombre and rol_data.nombre != existing_rol.nombre:
@@ -59,17 +73,43 @@ class RolUseCase:
         if rol_data.nombre and len(rol_data.nombre.strip()) < 2:
             raise ValidationError("El nombre del rol debe tener al menos 2 caracteres.")
 
-        return self.rol_repository.update(rol_id, rol_data)
+        updated_rol = self.rol_repository.update(rol_id, rol_data)
+        self.audit_use_case.log_action(
+            accion="UPDATE",
+            user_id=user_data.get("user_id"),
+            modelo="roles",
+            entidad_id=rol_id,
+            datos_nuevos=rol_data.model_dump(mode="json", exclude_unset=True),
+            datos_anteriores=datos_anteriores
+        )
 
-    def delete_rol(self, rol_id: int) -> Optional[Rol]:
+        return updated_rol
+
+    def delete_rol(self, rol_id: int, user_data: Dict[str, Any]) -> Optional[Rol]:
         """Elimina (desactiva) un rol"""
         rol = self.rol_repository.get_by_id(rol_id)
         if not rol:
             raise NotFoundError(f"Rol con id={rol_id} no encontrado.")
+        datos_anteriores = RolResponse.model_validate(rol).model_dump(mode="json")
+        deleted_rol = self.rol_repository.soft_delete(rol_id)
+        self.audit_use_case.log_action(
+            accion="DELETE",
+            user_id=user_data.get("user_id"),
+            modelo="roles",
+            entidad_id=rol_id,
+            datos_nuevos={"is_active": False},
+            datos_anteriores=datos_anteriores
+        )
 
-        return self.rol_repository.soft_delete(rol_id)
+        return deleted_rol
 
-    def assign_permisos_to_rol(self, rol_id: int, permisos_data: List[dict]) -> bool:
+    def assign_permisos_to_rol(self, rol_id: int, permisos_data: List[dict], user_data: Dict[str, Any]) -> bool:
+        # +++ INICIO (AUDITORÍA) +++
+        datos_anteriores_summary = self.get_rol_permisos_summary(rol_id)
+        if not datos_anteriores_summary:
+            raise NotFoundError(f"Rol con id={rol_id} no encontrado.")
+        datos_anteriores = datos_anteriores_summary.get("modulos", [])
+        # +++ FIN (AUDITORÍA) +++
         """Asigna permisos de módulos a un rol"""
         # Verificar que el rol existe
         rol = self.rol_repository.get_by_id(rol_id)
@@ -123,6 +163,17 @@ class RolUseCase:
         # Desactivar los permisos que no están en la nueva lista
         for permiso_sobrante in modulos_existentes.values():
             self.permiso_repository.soft_delete(permiso_sobrante.id_permiso_modulo)
+        
+        datos_nuevos_summary = self.get_rol_permisos_summary(rol_id)
+        datos_nuevos = datos_nuevos_summary.get("modulos", [])
+        self.audit_use_case.log_action(
+            accion="UPDATE",
+            user_id=user_data.get("user_id"),
+            modelo="permisos",
+            entidad_id=rol_id,
+            datos_nuevos=datos_nuevos,
+            datos_anteriores=datos_anteriores 
+        )
 
         return True
 
