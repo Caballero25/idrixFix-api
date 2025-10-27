@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, conint
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import date, datetime
 
 # --- Schemas para AuditoriaLog ---
@@ -22,8 +22,8 @@ class AuditoriaLogResponse(BaseModel):
     modelo: str
     entidad_id: str
     accion: str
-    datos_anteriores: Optional[Dict[str, Any]] = None
-    datos_nuevos: Optional[Dict[str, Any]] = None
+    datos_anteriores: Optional[Union[Dict, List]] = None
+    datos_nuevos: Optional[Union[Dict, List]] = None
     ejecutado_por_id: Optional[int] = None
     ejecutado_por_json: Optional[Dict[str, Any]] = None
     fecha: datetime

@@ -52,13 +52,12 @@ def get_logs_paginated(
     try:
         pagination_result = use_case.get_logs_paginated_by_filters(pagination_params)
         
-        # Mapeamos los ORMs ('data') a los schemas de respuesta
         response_data = [
             AuditoriaLogResponse.model_validate(log_orm).model_dump(mode="json")
             for log_orm in pagination_result["data"]
         ]
+        print(f"Datos transformados a response schema")
         
-        # Construimos la respuesta final
         response_data_with_meta = {
             "total_records": pagination_result["total_records"],
             "total_pages": pagination_result["total_pages"],
@@ -67,13 +66,16 @@ def get_logs_paginated(
             "data": response_data,
         }
         
+        print(f"Respuesta exitosa")
         return success_response(
             data=response_data_with_meta,
             message="Logs paginados obtenidos",
         )
+        
     except RepositoryError as e:
-        return error_response(
-            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        print(f"RepositoryError: {e}")
+        return error_response(message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
-         return error_response(message=str(e), status_code=500)
+        print(f"Unexpected error: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return error_response(message=str(e), status_code=500)
