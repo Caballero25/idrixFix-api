@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 from src.shared.base import get_auth_db
+from src.shared.security import get_current_user_data
+from typing import List, Dict, Any
 from src.shared.common.responses import success_response, error_response
 from src.modules.auth_service.src.infrastructure.db.repositories.usuario_repository import UsuarioRepository
 from src.modules.auth_service.src.infrastructure.db.repositories.rol_repository import RolRepository
@@ -12,13 +14,18 @@ from src.modules.auth_service.src.infrastructure.api.schemas.usuarios import (
     UsuarioResponse,
 )
 
+##Auditoria
+from src.shared.common.auditoria import get_audit_use_case
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
+
 router = APIRouter()
 
-def get_usuario_use_case(db: Session = Depends(get_auth_db)) -> UsuarioUseCase:
+def get_usuario_use_case(db: Session = Depends(get_auth_db), audit_uc: AuditUseCase = Depends(get_audit_use_case)) -> UsuarioUseCase:
     """Dependency para obtener el caso de uso de usuarios"""
     return UsuarioUseCase(
         usuario_repository=UsuarioRepository(db),
         rol_repository=RolRepository(db),
+        audit_use_case=audit_uc
     )
 
 
@@ -53,10 +60,11 @@ def get_usuario(
 @router.post("/", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def create_usuario(
     usuario_data: UsuarioCreate,
-    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case)
+    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     """Crea un nuevo usuario con permisos por módulo"""
-    new_data = usuario_use_case.create_usuario(usuario_data)
+    new_data = usuario_use_case.create_usuario(usuario_data, user_data)
     return success_response(
         data=UsuarioResponse.model_validate(new_data).model_dump(mode="json"),
         message="Usuario creado",
@@ -68,10 +76,11 @@ def create_usuario(
 def update_usuario(
     usuario_id: int,
     usuario_data: UsuarioUpdate,
-    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case)
+    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     """Actualiza un usuario existente con permisos por módulo"""
-    updated_data = usuario_use_case.update_usuario(usuario_id, usuario_data)
+    updated_data = usuario_use_case.update_usuario(usuario_id, usuario_data, user_data)
     if not updated_data:
         return error_response(
             message="Usuario no encontrado", 
@@ -86,10 +95,11 @@ def update_usuario(
 @router.delete("/{usuario_id}", status_code=status.HTTP_200_OK)
 def delete_usuario(
     usuario_id: int, 
-    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case)
+    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     """Elimina (desactiva) un usuario"""
-    deleted_data = usuario_use_case.delete_usuario(usuario_id)
+    deleted_data = usuario_use_case.delete_usuario(usuario_id, user_data)
     if not deleted_data:
         return error_response(
             message="Usuario no encontrado", 
@@ -101,19 +111,20 @@ def delete_usuario(
     )
 
 
-@router.post("/{usuario_id}/activate", status_code=status.HTTP_200_OK)
+@router.post("/{usuario_id}/activate", response_model=UsuarioResponse, status_code=status.HTTP_200_OK)
 def activate_usuario(
     usuario_id: int,
-    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case)
+    usuario_use_case: UsuarioUseCase = Depends(get_usuario_use_case),
+    user_data: Dict[str, Any] = Depends(get_current_user_data)
 ):
     """Activa un usuario"""
-    activated_data = usuario_use_case.activate_usuario(usuario_id)
+    activated_data = usuario_use_case.activate_usuario(usuario_id, user_data)
     if not activated_data:
         return error_response(
             message="Usuario no encontrado", 
             status_code=status.HTTP_404_NOT_FOUND
         )
     return success_response(
-        data={"id_usuario_activado": activated_data.id_usuario},
+        data=UsuarioResponse.model_validate(activated_data).model_dump(mode="json"),
         message="Usuario activado exitosamente"
     )

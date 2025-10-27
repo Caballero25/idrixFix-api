@@ -1,10 +1,13 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from src.modules.auth_service.src.application.ports.usuarios import IUsuarioRepository
 from src.modules.auth_service.src.application.ports.roles import IRolRepository
-from src.modules.auth_service.src.infrastructure.api.schemas.usuarios import UsuarioCreate, UsuarioUpdate
+from src.modules.auth_service.src.infrastructure.api.schemas.usuarios import UsuarioCreate, UsuarioUpdate, UsuarioResponse
 from src.modules.auth_service.src.infrastructure.db.models import Usuario
 from src.modules.auth_service.src.domain.value_objects import Password, Username
 from src.shared.exceptions import AlreadyExistsError, NotFoundError, ValidationError
+
+#Auditoria
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
 
 
 class UsuarioUseCase:
@@ -12,9 +15,11 @@ class UsuarioUseCase:
         self,
         usuario_repository: IUsuarioRepository,
         rol_repository: IRolRepository,
+        audit_use_case: AuditUseCase
     ):
         self.usuario_repository = usuario_repository
         self.rol_repository = rol_repository
+        self.audit_use_case = audit_use_case
 
     def get_all_usuarios(self) -> List[Usuario]:
         """Obtiene todos los usuarios"""
@@ -24,7 +29,7 @@ class UsuarioUseCase:
         """Obtiene un usuario por ID"""
         return self.usuario_repository.get_by_id(usuario_id)
 
-    def create_usuario(self, usuario_data: UsuarioCreate) -> Usuario:
+    def create_usuario(self, usuario_data: UsuarioCreate, user_data: Dict[str, Any]) -> Usuario:
         """Crea un nuevo usuario"""
         # Validar que el username no exista
         existing_user = self.usuario_repository.get_by_username(usuario_data.username)
@@ -49,15 +54,26 @@ class UsuarioUseCase:
             rol = self.rol_repository.get_by_id(usuario_data.id_rol)
             if not rol or not rol.is_active:
                 raise NotFoundError(f"Rol con id={usuario_data.id_rol} no encontrado o inactivo.")
+        
+        new_usuario_orm = self.usuario_repository.create(usuario_data)
+        # 2. Registrar en auditoría
+        self.audit_use_case.log_action(
+            accion="CREATE",
+            user_id=user_data.get("user_id"),
+            modelo="usuarios", # Nombre del modelo/tabla
+            entidad_id=new_usuario_orm.id_usuario, # ID del nuevo registro
+            datos_nuevos=usuario_data.model_dump(mode="json")
+        )
 
-        return self.usuario_repository.create(usuario_data)
+        return new_usuario_orm
 
-    def update_usuario(self, usuario_id: int, usuario_data: UsuarioUpdate) -> Optional[Usuario]:
+    def update_usuario(self, usuario_id: int, usuario_data: UsuarioUpdate, user_data: Dict[str, Any]) -> Optional[Usuario]:
         """Actualiza un usuario existente"""
         # Verificar que el usuario existe
         existing_user = self.usuario_repository.get_by_id(usuario_id)
         if not existing_user:
             raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
+        datos_anteriores = UsuarioResponse.model_validate(existing_user).model_dump(mode="json")
 
         # Si se actualiza username, verificar que no exista
         if usuario_data.username and usuario_data.username != existing_user.username:
@@ -85,17 +101,37 @@ class UsuarioUseCase:
             if not rol or not rol.is_active:
                 raise NotFoundError(f"Rol con id={usuario_data.id_rol} no encontrado o inactivo.")
 
-        return self.usuario_repository.update(usuario_id, usuario_data)
+        updated_user_orm = self.usuario_repository.update(usuario_id, usuario_data)
+        # 3. Registrar en auditoría
+        self.audit_use_case.log_action(
+            accion="UPDATE",
+            user_id=user_data.get("user_id"),
+            modelo="usuarios",
+            entidad_id=usuario_id,
+            datos_nuevos=usuario_data.model_dump(mode="json", exclude_unset=True), # ¡Serializar!
+            datos_anteriores=datos_anteriores
+        )
+        return updated_user_orm
 
-    def delete_usuario(self, usuario_id: int) -> Optional[Usuario]:
+    def delete_usuario(self, usuario_id: int, user_data: Dict[str, Any],) -> Optional[Usuario]:
         """Elimina (desactiva) un usuario"""
         usuario = self.usuario_repository.get_by_id(usuario_id)
         if not usuario:
             raise NotFoundError(f"Usuario con id={usuario_id} no encontrado.")
+        datos_anteriores = UsuarioResponse.model_validate(usuario).model_dump(mode="json")
+        updated_user = self.usuario_repository.soft_delete(usuario_id)
+        # 3. Registrar en auditoría
+        self.audit_use_case.log_action(
+            accion="DELETE",
+            user_id=user_data.get("user_id"),
+            modelo="usuarios",
+            entidad_id=usuario_id,
+            datos_nuevos=UsuarioResponse.model_validate(updated_user).model_dump(mode="json", exclude_unset=True), # ¡Serializar!
+            datos_anteriores=datos_anteriores
+        )
+        return updated_user
 
-        return self.usuario_repository.soft_delete(usuario_id)
-
-    def activate_usuario(self, usuario_id: int) -> Optional[Usuario]:
+    def activate_usuario(self, usuario_id: int, user_data: Dict[str, Any]) -> Optional[Usuario]:
         """Activa un usuario"""
         usuario = self.usuario_repository.get_by_id(usuario_id)
         if not usuario:
@@ -103,10 +139,21 @@ class UsuarioUseCase:
 
         if usuario.is_active:
             raise ValidationError("El usuario ya está activo.")
+        datos_anteriores = UsuarioResponse.model_validate(usuario).model_dump(mode="json")
 
         # Crear datos de actualización para activar
         update_data = UsuarioUpdate(is_active=True)
-        return self.usuario_repository.update(usuario_id, update_data)
+        updated_user = self.usuario_repository.update(usuario_id, update_data)
+        # 3. Registrar en auditoría
+        self.audit_use_case.log_action(
+            accion="UPDATE",
+            user_id=user_data.get("user_id"),
+            modelo="usuarios",
+            entidad_id=usuario_id,
+            datos_nuevos=UsuarioResponse.model_validate(updated_user).model_dump(mode="json", exclude_unset=True), # ¡Serializar!
+            datos_anteriores=datos_anteriores
+        )
+        return updated_user
 
     def change_password(self, usuario_id: int, current_password: str, new_password: str) -> bool:
         """Cambia la contraseña de un usuario"""

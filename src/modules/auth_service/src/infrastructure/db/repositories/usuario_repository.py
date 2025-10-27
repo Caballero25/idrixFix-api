@@ -23,7 +23,6 @@ class UsuarioRepository(IUsuarioRepository):
                     joinedload(Usuario.rol).joinedload(Rol.permisos_modulo),
                     joinedload(Usuario.lineas_asignadas)
                 )
-                .filter(Usuario.is_active == True)
                 .all()
             )
         except SQLAlchemyError as e:
@@ -37,7 +36,7 @@ class UsuarioRepository(IUsuarioRepository):
                     joinedload(Usuario.rol).joinedload(Rol.permisos_modulo),
                     joinedload(Usuario.lineas_asignadas)
                 )
-                .filter(Usuario.id_usuario == usuario_id, Usuario.is_active == True)
+                .filter(Usuario.id_usuario == usuario_id)
                 .first()
             )
             if not usuario:
