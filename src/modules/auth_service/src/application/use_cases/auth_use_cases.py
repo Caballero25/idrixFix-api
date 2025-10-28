@@ -104,11 +104,12 @@ class AuthUseCase:
 
             user_session = UserSession(
                 user_id=usuario.id_usuario,
+                is_superuser=usuario.is_superuser,
                 username=usuario.username,
                 rol_nombre=rol.nombre,
                 modulos=modulos,
                 token=token,
-                lineas_asignadas=lineas_permitidas # Ahora 'lineas_permitidas' SÍ existe
+                lineas_asignadas=lineas_permitidas
             )
 
             return user_session.to_response_dict()

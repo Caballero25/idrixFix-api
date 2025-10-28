@@ -168,6 +168,7 @@ class UserSession:
     modulos: List[ModuloInfo]
     token: Token
     lineas_asignadas: List[int]
+    is_superuser: bool
 
     def __post_init__(self):
         if self.user_id <= 0:
@@ -183,6 +184,7 @@ class UserSession:
         return {
             "user_id": self.user_id,
             "username": self.username,
+            "is_superuser": self.is_superuser,
             "token": self.token.value,
             "expires_at": self.token.expires_at.isoformat(),
             "rol": {

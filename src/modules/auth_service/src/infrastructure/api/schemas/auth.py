@@ -21,6 +21,7 @@ class LoginResponse(BaseModel):
     """Schema para respuesta de login"""
     user_id: int
     username: str
+    is_superuser: bool
     token: str
     expires_at: str
     rol: Dict[str, Any]
