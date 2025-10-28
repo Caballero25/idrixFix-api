@@ -12,7 +12,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Enum as SQLEnum,
 )
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, false
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from src.shared.database import _BaseAuth, _BaseMain
@@ -30,6 +30,7 @@ class Usuario(_BaseAuth):
     
     # Foreign Key a Rol
     id_rol = Column(BigInteger, ForeignKey("roles.id_rol"), nullable=True)
+    is_superuser = Column(Boolean, nullable=False, default=False, server_default=false())
     
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False)

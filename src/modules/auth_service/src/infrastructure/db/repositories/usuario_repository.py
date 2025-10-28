@@ -65,6 +65,7 @@ class UsuarioRepository(IUsuarioRepository):
                 username=usuario_data.username,
                 password_hash=usuario_data.password_hash,
                 id_rol=usuario_data.id_rol,
+                is_superuser=usuario_data.is_superuser,
                 is_active=True,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),

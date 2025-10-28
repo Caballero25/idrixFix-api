@@ -27,6 +27,7 @@ class Usuario:
     username: str = ""
     password_hash: str = ""
     id_rol: Optional[int] = None
+    is_superuser: bool = False
     is_active: bool = True
     last_login: Optional[datetime] = None
     created_at: Optional[datetime] = None

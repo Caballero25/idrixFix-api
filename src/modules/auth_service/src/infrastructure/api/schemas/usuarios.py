@@ -9,6 +9,7 @@ class UsuarioBase(BaseModel):
     """Schema base para Usuario"""
     username: str = Field(..., min_length=3, max_length=50)
     id_rol: Optional[int] = None
+    is_superuser: bool = Field(False, description="Indica si el usuario es super-administrador")
 
 
 class UsuarioCreate(UsuarioBase):
@@ -21,7 +22,8 @@ class UsuarioCreate(UsuarioBase):
             "example": {
                 "username": "jperez",
                 "password": "Password123!",
-                "id_rol": 2
+                "id_rol": 2,
+                "is_superuser": False
             }
         }
 
@@ -33,12 +35,14 @@ class UsuarioUpdate(BaseModel):
     is_active: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=8)
     password_hash: Optional[str] = None  # Se genera automáticamente
+    is_superuser: Optional[bool] = None
 
     class Config:
         json_schema_extra = {
             "example": {
                 "username": "jperez2",
-                "id_rol": 3
+                "id_rol": 3,
+                "is_superuser": True
             }
         }
 
@@ -61,6 +65,7 @@ class UsuarioResponse(UsuarioBase):
                 "id_usuario": 1,
                 "username": "jperez",
                 "id_rol": 2,
+                "is_superuser": False,
                 "is_active": True,
                 "last_login": "2024-01-01T10:30:00",
                 "created_at": "2024-01-01T08:00:00",
