@@ -38,14 +38,14 @@ class IWorkerMovementRepository(ABC):
         pass
     @abstractmethod
     def count_by_filters(
-        self, filters: WorkerMovementFilters, allowed_lines: List[str] 
+        self, filters: WorkerMovementFilters, allowed_lines: List[str], allowed_turnos: List[int]
     ) -> int:
         """Cuenta el total de registros WorkerMovement según los filtros."""
         pass
     
     @abstractmethod
     def get_paginated_by_filters(
-        self, filters: WorkerMovementFilters, page: int, page_size: int, allowed_lines: List[str] 
+        self, filters: WorkerMovementFilters, page: int, page_size: int, allowed_lines: List[str], allowed_turnos: List[int]
     ) -> Tuple[List[WorkerMovement], int]:
         """Obtiene una página de registros WorkerMovement y el conteo total."""
         pass

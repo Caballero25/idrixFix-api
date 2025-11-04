@@ -97,29 +97,26 @@ class WorkerMovementUseCases:
         return delete_movement
 
     def count_movements_by_filters(
-        self, filters: WorkerMovementFilters, allowed_lines: List[int]
+        self, filters: WorkerMovementFilters, allowed_lines: List[int], allowed_turnos: List[int]
     ) -> int:
         """Caso de uso para contar movimientos, filtrado por líneas permitidas."""
 
-        if not allowed_lines:
+        if not allowed_lines or not allowed_turnos:
             return 0
             
         allowed_lines_str = [str(line_id) for line_id in allowed_lines]
 
-        return self.repository.count_by_filters(filters, allowed_lines_str)
+        return self.repository.count_by_filters(filters, allowed_lines_str, allowed_turnos)
 
     def get_movements_paginated_by_filters(
-        self, filters: WorkerMovementPagination, allowed_lines: List[int]
+        self, filters: WorkerMovementPagination, allowed_lines: List[int], allowed_turnos: List[int]
     ) -> WorkerMovementPaginatedResponse:
         """Caso de uso para obtener movimientos paginados con metadatos, filtrado por líneas permitidas."""
         
-        if not allowed_lines:
+        if not allowed_lines or not allowed_turnos:
             return {
-                "total_records": 0,
-                "total_pages": 0,
-                "page": filters.page,
-                "page_size": filters.page_size,
-                "data": [],
+                "total_records": 0, "total_pages": 0,
+                "page": filters.page, "page_size": filters.page_size, "data": [],
             }
         
         allowed_lines_str = [str(line_id) for line_id in allowed_lines]
@@ -128,7 +125,8 @@ class WorkerMovementUseCases:
             filters=filters, 
             page=filters.page, 
             page_size=filters.page_size,
-            allowed_lines=allowed_lines_str  # <-- Nuevo argumento
+            allowed_lines=allowed_lines_str,
+            allowed_turnos=allowed_turnos
         )
         
         total_pages = ceil(total_records / filters.page_size) if total_records > 0 else 0

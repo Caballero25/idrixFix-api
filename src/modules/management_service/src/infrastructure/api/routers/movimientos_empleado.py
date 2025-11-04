@@ -137,9 +137,14 @@ def get_total_movements_by_filters(
 ):
     try:
         allowed_lines_ids = user_data.get("lineas", [])
+        allowed_turnos_ids = user_data.get("turnos", [])
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print(allowed_turnos_ids)
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         total_records = use_cases.count_movements_by_filters(
             filters=filters, 
-            allowed_lines=allowed_lines_ids
+            allowed_lines=allowed_lines_ids,
+            allowed_turnos=allowed_turnos_ids
         )
         return success_response(
             data=total_records,
@@ -161,9 +166,11 @@ def get_movements_paginated(
 ):
     try:
         allowed_lines_ids = user_data.get("lineas", [])
+        allowed_turnos_ids = user_data.get("turnos", [])
         pagination_result = use_cases.get_movements_paginated_by_filters(
             filters=pagination_params,
-            allowed_lines=allowed_lines_ids
+            allowed_lines=allowed_lines_ids,
+            allowed_turnos=allowed_turnos_ids
         )
         
         # Mapeamos las entidades de dominio ('data') a los schemas de respuesta

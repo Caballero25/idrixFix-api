@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import List, Optional, Tuple
 
 # Importaciones de los modelos, entidades, schemas y puertos
-from src.modules.management_service.src.infrastructure.db.models import WorkerMovementORM, RefDestinosMotivosORM, RefMotivosORM
+from src.modules.management_service.src.infrastructure.db.models import WorkerMovementORM, RefDestinosMotivosORM, RefMotivosORM, OperariosORM
 from src.modules.management_service.src.domain.entities import WorkerMovement, RefMotivo, RefDestinoMotivo
 from src.modules.management_service.src.infrastructure.api.schemas.movimientos_operario import (
     WorkerMovementCreate,
@@ -121,7 +121,7 @@ class WorkerMovementRepository(IWorkerMovementRepository):
     # +++ INICIO DE CAMBIOS +++
 
     def _apply_filters(
-        self, query, filters: WorkerMovementFilters, allowed_lines: List[str]
+        self, query, filters: WorkerMovementFilters, allowed_lines: List[str], allowed_turnos: List[int]
     ):
         """Función auxiliar para aplicar filtros, incluyendo el filtro de seguridad de líneas."""
         conditions = []
@@ -129,6 +129,13 @@ class WorkerMovementRepository(IWorkerMovementRepository):
         # 1. FILTRO DE SEGURIDAD OBLIGATORIO
         # El usuario solo puede consultar las líneas que tiene asignadas.
         conditions.append(WorkerMovementORM.linea.in_(allowed_lines))
+
+        # Hacemos el JOIN con la tabla de operarios
+        query = query.join(
+            OperariosORM,
+            WorkerMovementORM.codigo_operario == OperariosORM.OPER_CODIGO
+        )
+        conditions.append(OperariosORM.OPER_TURNO.in_(allowed_turnos))
 
         # 2. FILTROS OPCIONALES DEL USUARIO
         
@@ -157,34 +164,34 @@ class WorkerMovementRepository(IWorkerMovementRepository):
             
         return query
 
-    def count_by_filters(self, filters: WorkerMovementFilters, allowed_lines: List[str]) -> int:
+    def count_by_filters(self, filters: WorkerMovementFilters, allowed_lines: List[str], allowed_turnos: List[int]) -> int:
         """Cuenta movimientos aplicando filtros de seguridad y de usuario."""
         try:
             # Query base para contar (más eficiente que query(WorkerMovementORM))
             query = self.db.query(func.count(WorkerMovementORM.id))
             
             # Aplicar TODOS los filtros
-            query = self._apply_filters(query, filters, allowed_lines)
+            query = self._apply_filters(query, filters, allowed_lines, allowed_turnos)
             
             return query.scalar() or 0 # Usar scalar() para count
         except SQLAlchemyError as e:
             raise RepositoryError("Error al contar los movimientos por filtros.") from e
 
     def get_paginated_by_filters(
-        self, filters: WorkerMovementFilters, page: int, page_size: int, allowed_lines: List[str]
+        self, filters: WorkerMovementFilters, page: int, page_size: int, allowed_lines: List[str], allowed_turnos: List[int]
     ) -> Tuple[List[WorkerMovement], int]:
         """Obtiene movimientos paginados aplicando filtros de seguridad y de usuario."""
         try:
             # 1. Obtener el conteo total con los filtros
             # (Llama al método de conteo que ya tiene la lógica de filtros)
-            total_records = self.count_by_filters(filters, allowed_lines)
+            total_records = self.count_by_filters(filters, allowed_lines, allowed_turnos)
             
             if total_records == 0:
                 return [], 0
             
             # 2. Aplicar filtros, paginación y ordenamiento para los datos
             base_query = self.db.query(WorkerMovementORM)
-            data_query = self._apply_filters(base_query, filters, allowed_lines)
+            data_query = self._apply_filters(base_query, filters, allowed_lines, allowed_turnos)
             
             # Ordenar por hora/fecha para paginación consistente
             data_query = data_query.order_by(WorkerMovementORM.fecha_p.desc(), WorkerMovementORM.hora.desc())

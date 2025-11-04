@@ -151,6 +151,10 @@ class AuthUseCase:
             asignacion.id_linea_externa 
             for asignacion in usuario.lineas_asignadas or []
         ]
+        turnos_permitidos = [
+                asignacion.id_turno_externo
+                for asignacion in usuario.turnos_asignados or []
+            ]
 
         # Construir información del usuario
         modulos = []
@@ -182,7 +186,8 @@ class AuthUseCase:
                 "nombre": rol.nombre,
                 "modulos": modulos
             },
-            "lineas": lineas_permitidas 
+            "lineas": lineas_permitidas,
+            "turnos": turnos_permitidos
         }
 
     def refresh_token(self, token: str) -> Optional[Dict[str, Any]]:
