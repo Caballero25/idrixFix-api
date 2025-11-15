@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+
+from src.modules.lineas_entrada_salida_service.infrastructure.api.routers.lineas_entrada_router import router as lineas_entrada_router
 from src.shared.common.responses import validation_error_response
 from src.shared.exceptions import DomainError
 from src.shared.common.exception_handlers import domain_exception_handler
@@ -62,6 +64,7 @@ app.include_router(lineas_asignadas_router, prefix="/api/lineas-asignadas", tags
 app.include_router(turnos_asignados_router, prefix="/api/turnos-asignados", tags=["Turnos Asignados"])
 app.include_router(movimientos_empleado_router, prefix="/api/movimientos-empleado", tags=["Movimientos Empleados"])
 app.include_router(auditoria_logs, prefix="/api/auditoria", tags=["Auditoria de Registros"])
+app.include_router(lineas_entrada_router, prefix="/api/lineas-entrada", tags=["Lineas Entrada"])
 
 @app.get("/health")
 async def health_check():

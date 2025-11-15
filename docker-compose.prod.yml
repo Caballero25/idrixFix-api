@@ -53,6 +53,27 @@ services:
       retries: 3
       start_period: 40s
 
+  lineas_entrada_salida_service:
+    build:
+      context: .
+      dockerfile: src/modules/lineas_entrada_salida_service/Dockerfile
+    container_name: lineas_entrada_salida_service
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: mssql+pyodbc://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@${AUTH_DB_HOST}:${AUTH_DB_PORT}/${AUTH_DB_NAME}?driver=${AUTH_DB_DRIVER}&TrustServerCertificate=${AUTH_DB_TRUST_CERTIFICATE}
+      SERVICE_HOST: 0.0.0.0
+      SERVICE_PORT: 8003
+      PYTHONPATH: /app
+    networks:
+      - management_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   api_gateway:
     build:
       context: .
@@ -63,6 +84,7 @@ services:
     environment:
       MANAGEMENT_SERVICE_URL: http://management_service:8001
       AUTH_SERVICE_URL: http://auth_service:8002
+      LINEAS_ENTRADA_SALIDA_SERVICE_URL: http://lineas_entrada_salida_service:8003
       GATEWAY_HOST: 0.0.0.0
       GATEWAY_PORT: 8000
       PYTHONPATH: /app
@@ -70,6 +92,8 @@ services:
       management_service:
         condition: service_healthy
       auth_service:
+        condition: service_healthy
+      lineas_entrada_salida_service:
         condition: service_healthy
     networks:
       - management_network
@@ -86,6 +110,3 @@ networks:
 
 volumes:
   sqlserver_data:
-
-#docker compose --env-file .env.production -f docker-compose.prod.yml up -d
-#docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
