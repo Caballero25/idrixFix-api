@@ -17,13 +17,9 @@ class LineasSalidaResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-#TODO
 class LineasSalidaUpdate(BaseModel):
-    turno: Optional[int]
+    codigo_bastidor: Optional[str]
     p_lote: Optional[str]
-    hora_inicio: Optional[time]
-
 
 class LineasSalidaPaginatedResponse(BaseModel):
     total_records: int

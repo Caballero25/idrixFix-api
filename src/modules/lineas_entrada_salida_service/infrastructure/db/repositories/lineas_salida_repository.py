@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida import ILineasSalidaRepository
 from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasFilters
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import LineasSalidaUpdate
 from src.modules.lineas_entrada_salida_service.infrastructure.db.models import LineaUnoSalidaORM, LineaDosSalidaORM, \
     LineaTresSalidaORM, LineaCuatroSalidaORM, LineaCincoSalidaORM, LineaSeisSalidaORM
 from src.shared.exceptions import RepositoryError, NotFoundError
@@ -20,6 +21,7 @@ LINEA_ORM_MAPPER = {
     5: LineaCincoSalidaORM,
     6: LineaSeisSalidaORM
 }
+
 
 class LineasSalidaRepository(ILineasSalidaRepository):
     def __init__(self, db: Session):
@@ -66,16 +68,16 @@ class LineasSalidaRepository(ILineasSalidaRepository):
             if not linea_orm:
                 return None
             return LineasSalida(
-                    id=linea_orm.id,
-                    fecha_p=linea_orm.fecha_p,
-                    fecha=linea_orm.fecha,
-                    peso_kg=linea_orm.peso_kg,
-                    codigo_bastidor=linea_orm.codigo_bastidor,
-                    p_lote=linea_orm.p_lote,
-                    codigo_parrilla=linea_orm.codigo_parrilla,
-                    codigo_obrero=linea_orm.codigo_obrero,
-                    guid=linea_orm.guid
-                )
+                id=linea_orm.id,
+                fecha_p=linea_orm.fecha_p,
+                fecha=linea_orm.fecha,
+                peso_kg=linea_orm.peso_kg,
+                codigo_bastidor=linea_orm.codigo_bastidor,
+                p_lote=linea_orm.p_lote,
+                codigo_parrilla=linea_orm.codigo_parrilla,
+                codigo_obrero=linea_orm.codigo_obrero,
+                guid=linea_orm.guid
+            )
         except SQLAlchemyError as e:
             raise RepositoryError("Error al consultar la linea salida.") from e
 
@@ -119,35 +121,32 @@ class LineasSalidaRepository(ILineasSalidaRepository):
             logging.error(f"FALLO DE DB DETALLADO: {e}")
             raise RepositoryError("Error al obtener todas las líneas salida.") from e
 
-    #TODO hacer el update
+    def update(self, linea_id: int, linea_salida_data: LineasSalidaUpdate, linea_num: int) -> Optional[LineasSalida]:
+        orm_model = self.db.query(self._get_orm_model(linea_num)).get(linea_id)
+        if not orm_model:
+            raise NotFoundError(f"Producción de linea entrada con id={linea_id} no encontrado.")
 
-    # def update(self, linea_id: int, linea_entrada_data: LineasEntradaUpdate, linea_num: int) -> Optional[LineasEntrada]:
-    #     orm_model = self.db.query(self._get_orm_model(linea_num)).get(linea_id)
-    #     if not orm_model:
-    #         raise NotFoundError(f"Producción de linea entrada con id={linea_id} no encontrado.")
-    #
-    #     update_data = linea_entrada_data.model_dump(exclude_unset=True)
-    #     for key, value in update_data.items():
-    #         setattr(orm_model, key, value)
-    #
-    #     try:
-    #         self.db.commit()
-    #         self.db.refresh(orm_model)
-    #         return LineasEntrada(
-    #                 id=orm_model.id,
-    #                 fecha_p=orm_model.fecha_p,
-    #                 fecha=orm_model.fecha,
-    #                 peso_kg=orm_model.peso_kg,
-    #                 turno=orm_model.turno,
-    #                 codigo_secuencia=orm_model.codigo_secuencia,
-    #                 codigo_parrilla=orm_model.codigo_parrilla,
-    #                 p_lote=orm_model.p_lote,
-    #                 hora_inicio=orm_model.hora_inicio,
-    #                 guid=orm_model.guid
-    #             )
-    #     except SQLAlchemyError as e:
-    #         self.db.rollback()
-    #         raise RepositoryError("Error al actualizar la producción de la linea entrada.") from e
+        update_data = linea_salida_data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(orm_model, key, value)
+
+        try:
+            self.db.commit()
+            self.db.refresh(orm_model)
+            return LineasSalida(
+                id=orm_model.id,
+                fecha_p=orm_model.fecha_p,
+                fecha=orm_model.fecha,
+                peso_kg=orm_model.peso_kg,
+                codigo_bastidor=orm_model.codigo_bastidor,
+                p_lote=orm_model.p_lote,
+                codigo_parrilla=orm_model.codigo_parrilla,
+                codigo_obrero=orm_model.codigo_obrero,
+                guid=orm_model.guid
+            )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise RepositoryError("Error al actualizar la producción de la linea salida.") from e
 
     def remove(self, linea_id: int, linea_num: int) -> bool:
         try:

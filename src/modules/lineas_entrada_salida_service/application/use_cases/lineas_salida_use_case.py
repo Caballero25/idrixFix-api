@@ -5,7 +5,7 @@ from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida i
 from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasPagination
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import \
-    LineasSalidaPaginatedResponse
+    LineasSalidaPaginatedResponse, LineasSalidaUpdate
 from src.shared.exceptions import NotFoundError
 
 
@@ -35,11 +35,9 @@ class LineasSalidaUseCase:
         return self.lineas_salida_repository.get_by_id(linea_id, linea_num)
 
     #TODO agregar auditorias
-    ##TODO hacer update
-
-    # def update_linea_salida(self, linea_id, linea_salida_data: LineasSalidaUpdate, linea_num: int) -> Optional[LineasSalida]:
-    #     updated_linea_salida = self.lineas_salida_repository.update(linea_id, linea_salida_data, linea_num)
-    #     return updated_linea_salida
+    def update_linea_salida(self, linea_id, linea_salida_data: LineasSalidaUpdate, linea_num: int) -> Optional[LineasSalida]:
+        updated_linea_salida = self.lineas_salida_repository.update(linea_id, linea_salida_data, linea_num)
+        return updated_linea_salida
 
     # TODO agregar auditorias
     def remove_linea_salida(self, linea_id: int, linea_num: int) -> bool:

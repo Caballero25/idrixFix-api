@@ -15,9 +15,9 @@ class ILineasSalidaRepository(ABC):
     def get_by_id(self, linea_id: int, linea_num: int) -> Optional[LineasSalida]:
         pass
 
-    # @abstractmethod
-    # def update(self, linea_id: int, linea_salida_data: LineasSalidaUpdate, linea_num: int) -> Optional[LineasSalida]:
-    #     pass
+    @abstractmethod
+    def update(self, linea_id: int, linea_salida_data: LineasSalidaUpdate, linea_num: int) -> Optional[LineasSalida]:
+        pass
 
     @abstractmethod
     def remove(self, linea_id: int, linea_num: int) -> bool:
