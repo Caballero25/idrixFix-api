@@ -29,4 +29,4 @@ class LineasSalidaPaginatedResponse(BaseModel):
     data: List[LineasSalidaResponse]
 
 class TaraIdRequest(BaseModel):
-    tara_id: float
+    tara_id: int
