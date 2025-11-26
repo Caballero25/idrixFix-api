@@ -8,7 +8,7 @@ from src.modules.lineas_entrada_salida_service.domain.entities import LineasSali
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasPagination
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import \
     LineasSalidaPaginatedResponse, LineasSalidaUpdate, LineasSalidaResponse
-from src.shared.exceptions import NotFoundError
+from src.shared.exceptions import NotFoundError, ValidationError
 
 
 class LineasSalidaUseCase:
@@ -86,6 +86,8 @@ class LineasSalidaUseCase:
         tara = self.control_tara_repository.get_by_id(tara_id)
 
         linea.peso_kg -= tara.peso_kg
+        if linea.peso_kg <= 0:
+            raise ValidationError("El peso debe quedar mayor que cero")
 
         updated_linea_salida = self.lineas_salida_repository.agregar_tara(linea_id, linea_num, linea.peso_kg)
         self.audit_use_case.log_action(
