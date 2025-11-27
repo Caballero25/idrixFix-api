@@ -164,13 +164,14 @@ class LineasEntradaRepository(ILineasEntradaRepository):
             logging.error(f"FALLO DE DB DETALLADO: {e}")
             raise RepositoryError("Error al elimar linea entrada.") from e
 
-    def update_codigo_parrilla(self, linea_id: int, linea_num: int, valor: str) -> Optional[LineasEntrada]:
+    def update_codigo_parrilla(self, linea_id: int, linea_num: int, valor_parrilla: str, valor_secuencia: str) -> Optional[LineasEntrada]:
         try:
             linea_orm = self.db.query(self._get_orm_model(linea_num)).get(linea_id)
             if linea_orm is None:
                 raise NotFoundError(f"Producción de linea entrada con id={linea_id} no encontrado.")
 
-            linea_orm.codigo_parrilla = valor
+            linea_orm.codigo_parrilla = valor_parrilla
+            linea_orm.codigo_secuencia = valor_secuencia
             self.db.commit()
             self.db.refresh(linea_orm)
 

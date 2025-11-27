@@ -85,8 +85,9 @@ class LineasEntradaUseCase:
         if valor == 0:
             raise ValidationError("El valor no puede ser cero.")
 
-        nuevo_valor = str(int(linea.codigo_parrilla or 0) + valor)
-        updated = self.lineas_entrada_repository.update_codigo_parrilla(linea_id, linea_num, nuevo_valor)
+        nuevo_valor_parrilla = str(int(linea.codigo_parrilla or 0) + valor)
+        nuevo_valor_secuencia = str(int(linea.codigo_secuencia or 0) + valor)
+        updated = self.lineas_entrada_repository.update_codigo_parrilla(linea_id, linea_num, nuevo_valor_parrilla, nuevo_valor_secuencia)
         self.audit_use_case.log_action(
             accion="UPDATE",
             user_id=user_data.get("user_id"),
