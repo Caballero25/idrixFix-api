@@ -6,8 +6,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida import ILineasSalidaRepository
-from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida, ControlTara
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasFilters
+from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasFilters
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import LineasSalidaUpdate
 from src.modules.lineas_entrada_salida_service.infrastructure.db.models import LineaUnoSalidaORM, LineaDosSalidaORM, \
     LineaTresSalidaORM, LineaCuatroSalidaORM, LineaCincoSalidaORM, LineaSeisSalidaORM
@@ -186,3 +186,28 @@ class LineasSalidaRepository(ILineasSalidaRepository):
         except SQLAlchemyError as e:
             self.db.rollback()
             raise RepositoryError("Error al agregar la tara a la línea salida.") from e
+
+    def update_codigo_parrilla(self, linea_id: int, linea_num: int, valor_parrilla: str) -> Optional[LineasSalida]:
+        try:
+            linea_orm = self.db.query(self._get_orm_model(linea_num)).get(linea_id)
+            if linea_orm is None:
+                raise NotFoundError(f"Producción de linea salida con id={linea_id} no encontrado.")
+
+            linea_orm.codigo_parrilla = valor_parrilla
+            self.db.commit()
+            self.db.refresh(linea_orm)
+
+            return LineasSalida(
+                id=linea_orm.id,
+                fecha_p=linea_orm.fecha_p,
+                fecha=linea_orm.fecha,
+                peso_kg=linea_orm.peso_kg,
+                codigo_bastidor=linea_orm.codigo_bastidor,
+                p_lote=linea_orm.p_lote,
+                codigo_parrilla=linea_orm.codigo_parrilla,
+                codigo_obrero=linea_orm.codigo_obrero,
+                guid=linea_orm.guid
+            )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise RepositoryError("Error al actualizar el código de parrilla de la línea salida.") from e

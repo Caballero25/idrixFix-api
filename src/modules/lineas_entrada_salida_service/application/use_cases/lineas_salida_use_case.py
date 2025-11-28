@@ -6,7 +6,7 @@ from src.modules.auth_service.src.application.use_cases.audit_use_case import Au
 from src.modules.lineas_entrada_salida_service.application.ports.control_tara import IControlTaraRepository
 from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida import ILineasSalidaRepository
 from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasPagination
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasPagination
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import \
     LineasSalidaPaginatedResponse, LineasSalidaUpdate, LineasSalidaResponse
 from src.shared.exceptions import NotFoundError, ValidationError
@@ -118,3 +118,21 @@ class LineasSalidaUseCase:
         )
 
         return updated_linea_salida
+
+    def update_codigo_parrilla(self, linea_id: int, linea_num: int, valor: int, user_data: Dict[str, Any]):
+        linea = self.lineas_salida_repository.get_by_id(linea_id, linea_num)
+
+        if valor == 0:
+            raise ValidationError("El valor no puede ser cero.")
+
+        nuevo_valor_parrilla = str(int(linea.codigo_parrilla or 0) + valor)
+        updated = self.lineas_salida_repository.update_codigo_parrilla(linea_id, linea_num, nuevo_valor_parrilla)
+        self.audit_use_case.log_action(
+            accion="UPDATE",
+            user_id=user_data.get("user_id"),
+            modelo=self._modelo_auditoria(linea_num),
+            entidad_id=linea_id,
+            datos_nuevos=LineasSalidaResponse.model_validate(updated).model_dump(mode="json"),
+            datos_anteriores=LineasSalidaResponse.model_validate(linea).model_dump(mode="json")
+        )
+        return updated

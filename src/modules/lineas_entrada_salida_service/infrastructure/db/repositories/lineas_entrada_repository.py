@@ -8,7 +8,7 @@ from sqlalchemy import and_, func
 from src.modules.lineas_entrada_salida_service.application.ports.lineas_entrada import ILineasEntradaRepository
 from src.modules.lineas_entrada_salida_service.domain.entities import LineasEntrada
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import LineasEntradaUpdate
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import \
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import \
     LineasFilters
 from src.modules.lineas_entrada_salida_service.infrastructure.db.models import LineaUnoEntradaORM, LineaDosEntradaORM, \
     LineaTresEntradaORM, LineaCuatroEntradaORM, LineaCincoEntradaORM, LineaSeisEntradaORM

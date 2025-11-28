@@ -7,8 +7,8 @@ from src.modules.auth_service.src.application.use_cases.audit_use_case import Au
 from src.modules.lineas_entrada_salida_service.application.use_cases.lineas_entrada_use_case import \
     LineasEntradaUseCase
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import \
-    LineasEntradaResponse, LineasEntradaUpdate, UpdateCodigoParrillaRequest
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import LineasPagination
+    LineasEntradaResponse, LineasEntradaUpdate
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasPagination, UpdateCodigoParrillaRequest
 from src.modules.lineas_entrada_salida_service.infrastructure.db.repositories.lineas_entrada_repository import \
     LineasEntradaRepository
 from src.shared.base import get_db

@@ -10,3 +10,6 @@ class LineasFilters(BaseModel):
 class LineasPagination(LineasFilters):
     page: conint(ge=1) = 1
     page_size: conint(ge=1) = 20
+
+class UpdateCodigoParrillaRequest(BaseModel):
+    valor: int

@@ -6,7 +6,7 @@ from src.modules.lineas_entrada_salida_service.application.ports.lineas_entrada 
 from src.modules.lineas_entrada_salida_service.domain.entities import LineasEntrada
 from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import \
     LineasEntradaPaginatedResponse, LineasEntradaUpdate, LineasEntradaResponse
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_filters import \
+from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import \
     LineasPagination
 from src.shared.exceptions import NotFoundError, ValidationError
 
