@@ -149,6 +149,7 @@ class LineasSalidaUseCase:
         if data.peso_kg <= 0:
             raise ValidationError("El peso debe ser mayor que cero.")
 
+        # Obtener registros
         lineas = self.lineas_salida_repository.get_all_by_filters(
             filters=LineasFilters(fecha=data.fecha, lote=data.lote),
             linea_num=linea_num
@@ -177,15 +178,21 @@ class LineasSalidaUseCase:
 
         lineas_actualizadas = self.lineas_salida_repository.agregar_panzas(items_para_actualizar)
 
+        logs_batch = []
         for updated_linea in lineas_actualizadas:
-            self.audit_use_case.log_action(
-                accion="UPDATE",
-                user_id=user_data.get("user_id"),
-                modelo=self._modelo_auditoria(linea_num),
-                entidad_id=updated_linea.id,
-                datos_nuevos=LineasSalidaResponse.model_validate(updated_linea).model_dump(mode="json"),
-                datos_anteriores=datos_anteriores.get(updated_linea.id)
-            )
+            logs_batch.append({
+                "accion": "UPDATE",
+                "modelo": self._modelo_auditoria(linea_num),
+                "entidad_id": updated_linea.id,
+                "datos_nuevos": LineasSalidaResponse.model_validate(updated_linea).model_dump(mode="json"),
+                "datos_anteriores": datos_anteriores.get(updated_linea.id)
+            })
+
+        self.audit_use_case.log_actions_batch(
+            logs=logs_batch,
+            user_id=user_data.get("user_id")
+        )
 
         return len(lineas_actualizadas)
+
 

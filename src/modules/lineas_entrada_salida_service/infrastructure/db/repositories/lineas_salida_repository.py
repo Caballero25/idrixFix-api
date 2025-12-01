@@ -266,7 +266,6 @@ class LineasSalidaRepository(ILineasSalidaRepository):
 
             self.db.commit()
 
-            # Refrescar para obtener los valores finales desde la DB
             salidas = []
             for orm_model, linea_orm in lineas_modificadas:
                 self.db.refresh(linea_orm)

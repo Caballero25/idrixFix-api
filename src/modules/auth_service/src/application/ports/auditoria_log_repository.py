@@ -20,3 +20,7 @@ class IAuditoriaLogRepository(ABC):
     ) -> Tuple[List[AuditoriaLogORM], int]:
         """Obtiene logs paginados según filtros y devuelve ORMs y conteo."""
         pass
+
+    @abstractmethod
+    def create_logs_batch(self, logs_data: list[dict]) -> bool:
+        pass
