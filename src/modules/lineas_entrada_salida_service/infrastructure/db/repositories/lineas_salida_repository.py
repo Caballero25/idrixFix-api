@@ -245,31 +245,48 @@ class LineasSalidaRepository(ILineasSalidaRepository):
             self.db.rollback()
             raise RepositoryError("Error al actualizar el código de parrilla de la línea salida.") from e
 
-
-    def agregar_panza(self, linea_id: int, linea_num: int, nuevo_peso: float) -> Optional[LineasSalida]:
+    def agregar_panzas(self, items: list[dict]) -> list[LineasSalida]:
         try:
-            orm_model = self._get_orm_model(linea_num)
-            linea_orm = self.db.query(orm_model).get(linea_id)
+            lineas_modificadas = []
 
-            if linea_orm is None:
-                raise NotFoundError(f"Registro con id={linea_id} no encontrado.")
+            for item in items:
+                linea_id = item["linea_id"]
+                linea_num = item["linea_num"]
+                nuevo_peso = item["nuevo_peso"]
 
-            linea_orm.peso_kg = nuevo_peso
+                orm_model = self._get_orm_model(linea_num)
+                linea_orm = self.db.query(orm_model).get(linea_id)
+
+                if linea_orm is None:
+                    raise NotFoundError(f"Registro con id={linea_id} no encontrado.")
+
+                linea_orm.peso_kg = nuevo_peso
+
+                lineas_modificadas.append((orm_model, linea_orm))
+
             self.db.commit()
-            self.db.refresh(linea_orm)
 
-            return LineasSalida(
-                id=linea_orm.id,
-                fecha_p=linea_orm.fecha_p,
-                fecha=linea_orm.fecha,
-                peso_kg=linea_orm.peso_kg,
-                codigo_bastidor=linea_orm.codigo_bastidor,
-                p_lote=linea_orm.p_lote,
-                codigo_parrilla=linea_orm.codigo_parrilla,
-                codigo_obrero=linea_orm.codigo_obrero,
-                guid=linea_orm.guid
-            )
+            # Refrescar para obtener los valores finales desde la DB
+            salidas = []
+            for orm_model, linea_orm in lineas_modificadas:
+                self.db.refresh(linea_orm)
+                salidas.append(
+                    LineasSalida(
+                        id=linea_orm.id,
+                        fecha_p=linea_orm.fecha_p,
+                        fecha=linea_orm.fecha,
+                        peso_kg=linea_orm.peso_kg,
+                        codigo_bastidor=linea_orm.codigo_bastidor,
+                        p_lote=linea_orm.p_lote,
+                        codigo_parrilla=linea_orm.codigo_parrilla,
+                        codigo_obrero=linea_orm.codigo_obrero,
+                        guid=linea_orm.guid,
+                    )
+                )
+
+            return salidas
 
         except SQLAlchemyError as e:
             self.db.rollback()
-            raise RepositoryError("Error al actualizar peso.") from e
+            raise RepositoryError("Error al actualizar pesos.") from e
+

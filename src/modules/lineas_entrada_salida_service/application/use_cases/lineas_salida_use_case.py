@@ -146,9 +146,9 @@ class LineasSalidaUseCase:
         return self.lineas_salida_repository.get_all_by_filters(filters, linea_num)
 
     def agregar_panza(self, linea_num: int, data: PanzaRequest, user_data: Dict[str, Any]) -> int:
-        if data.peso_kg <= 0: raise ValidationError("El peso debe ser mayor que cero.")
+        if data.peso_kg <= 0:
+            raise ValidationError("El peso debe ser mayor que cero.")
 
-        # Obtener TODOS los registros filtrados
         lineas = self.lineas_salida_repository.get_all_by_filters(
             filters=LineasFilters(fecha=data.fecha, lote=data.lote),
             linea_num=linea_num
@@ -157,23 +157,35 @@ class LineasSalidaUseCase:
             raise NotFoundError("No se encontraron registros con los filtros proporcionados.")
 
         peso_panza_dec = Decimal(str(data.peso_kg))
-        contador = 0
+
+        items_para_actualizar = []
+        datos_anteriores = {}
+
         for linea in lineas:
             peso_dec = Decimal(str(linea.peso_kg))
-            nuevo_peso = float((peso_dec + peso_panza_dec).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
-            updated_linea = self.lineas_salida_repository.agregar_panza(linea.id, linea_num, nuevo_peso)
+            nuevo_peso = float(
+                (peso_dec + peso_panza_dec).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            )
 
-            # Auditoría por registro
+            datos_anteriores[linea.id] = LineasSalidaResponse.model_validate(linea).model_dump(mode="json")
+
+            items_para_actualizar.append({
+                "linea_id": linea.id,
+                "linea_num": linea_num,
+                "nuevo_peso": nuevo_peso
+            })
+
+        lineas_actualizadas = self.lineas_salida_repository.agregar_panzas(items_para_actualizar)
+
+        for updated_linea in lineas_actualizadas:
             self.audit_use_case.log_action(
                 accion="UPDATE",
                 user_id=user_data.get("user_id"),
                 modelo=self._modelo_auditoria(linea_num),
-                entidad_id=linea.id,
+                entidad_id=updated_linea.id,
                 datos_nuevos=LineasSalidaResponse.model_validate(updated_linea).model_dump(mode="json"),
-                datos_anteriores=LineasSalidaResponse.model_validate(linea).model_dump(mode="json")
+                datos_anteriores=datos_anteriores.get(updated_linea.id)
             )
 
-            # Agregar a la lista de resultados
-            contador += 1
+        return len(lineas_actualizadas)
 
-        return contador

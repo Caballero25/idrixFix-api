@@ -37,7 +37,7 @@ class ILineasSalidaRepository(ABC):
         pass
 
     @abstractmethod
-    def agregar_panza(self, linea_id: int, linea_num: int, nuevo_peso: float) -> Optional[LineasSalida]:
+    def agregar_panzas(self, items: list[dict]) -> list[LineasSalida]:
         pass
 
     @abstractmethod
