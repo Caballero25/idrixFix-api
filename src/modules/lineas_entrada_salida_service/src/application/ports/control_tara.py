@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.control_tara import TaraCreate
-from src.modules.lineas_entrada_salida_service.domain.entities import ControlTara
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.control_tara import TaraCreate
+from src.modules.lineas_entrada_salida_service.src.domain.entities import ControlTara
 
 
 class IControlTaraRepository(ABC):

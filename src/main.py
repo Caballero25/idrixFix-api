@@ -1,15 +1,13 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 
-from src.modules.lineas_entrada_salida_service.infrastructure.api.routers.control_tara_router import router as control_tara_router
-from src.modules.lineas_entrada_salida_service.infrastructure.api.routers.lineas_salida_router import router as lineas_salida_router
-from src.modules.lineas_entrada_salida_service.infrastructure.api.routers.lineas_entrada_router import router as lineas_entrada_router
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.control_tara_router import router as control_tara_router
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.lineas_salida_router import router as lineas_salida_router
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.lineas_entrada_router import router as lineas_entrada_router
 from src.shared.common.responses import validation_error_response
 from src.shared.exceptions import DomainError
 from src.shared.common.exception_handlers import domain_exception_handler
-from src.shared.config import settings
 from src.shared.cors_config import configure_cors
-import src.shared.models
 from datetime import datetime
 
 from src.modules.management_service.src.infrastructure.api.routers.movimientos_empleado import (

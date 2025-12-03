@@ -1,9 +1,9 @@
 from typing import Optional, List, Dict, Any
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.ports.control_tara import IControlTaraRepository
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.control_tara import TaraCreate, TaraResponse
-from src.modules.lineas_entrada_salida_service.domain.entities import ControlTara
+from src.modules.lineas_entrada_salida_service.src.application.ports.control_tara import IControlTaraRepository
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.control_tara import TaraCreate, TaraResponse
+from src.modules.lineas_entrada_salida_service.src.domain.entities import ControlTara
 from src.shared.exceptions import AlreadyExistsError, ValidationError
 
 

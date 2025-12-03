@@ -2,11 +2,11 @@ from math import ceil
 from typing import Optional, Dict, Any
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.ports.lineas_entrada import ILineasEntradaRepository
-from src.modules.lineas_entrada_salida_service.domain.entities import LineasEntrada
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import \
+from src.modules.lineas_entrada_salida_service.src.application.ports.lineas_entrada import ILineasEntradaRepository
+from src.modules.lineas_entrada_salida_service.src.domain.entities import LineasEntrada
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_entrada import \
     LineasEntradaPaginatedResponse, LineasEntradaUpdate, LineasEntradaResponse
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import \
     LineasPagination
 from src.shared.exceptions import NotFoundError, ValidationError
 

@@ -1,8 +1,8 @@
-from datetime import date, datetime, time
+from datetime import date, datetime
 from pydantic import BaseModel
 from typing import Optional, List
 
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasFilters
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import LineasFilters
 
 
 class LineasSalidaResponse(BaseModel):

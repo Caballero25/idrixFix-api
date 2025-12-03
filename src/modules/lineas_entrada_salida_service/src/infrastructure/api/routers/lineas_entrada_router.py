@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends, status, Path
 from sqlalchemy.orm import Session
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.use_cases.lineas_entrada_use_case import \
+from src.modules.lineas_entrada_salida_service.src.application.use_cases.lineas_entrada_use_case import \
     LineasEntradaUseCase
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_entrada import \
     LineasEntradaResponse, LineasEntradaUpdate
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasPagination, UpdateCodigoParrillaRequest
-from src.modules.lineas_entrada_salida_service.infrastructure.db.repositories.lineas_entrada_repository import \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import LineasPagination, UpdateCodigoParrillaRequest
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.repositories.lineas_entrada_repository import \
     LineasEntradaRepository
 from src.shared.base import get_db
 from src.shared.common.auditoria import get_audit_use_case

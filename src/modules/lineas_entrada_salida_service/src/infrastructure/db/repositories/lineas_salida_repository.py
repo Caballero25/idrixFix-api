@@ -5,11 +5,11 @@ from sqlalchemy import func, and_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida import ILineasSalidaRepository
-from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasFilters
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import LineasSalidaUpdate
-from src.modules.lineas_entrada_salida_service.infrastructure.db.models import LineaUnoSalidaORM, LineaDosSalidaORM, \
+from src.modules.lineas_entrada_salida_service.src.application.ports.lineas_salida import ILineasSalidaRepository
+from src.modules.lineas_entrada_salida_service.src.domain.entities import LineasSalida
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import LineasFilters
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_salida import LineasSalidaUpdate
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.models import LineaUnoSalidaORM, LineaDosSalidaORM, \
     LineaTresSalidaORM, LineaCuatroSalidaORM, LineaCincoSalidaORM, LineaSeisSalidaORM
 from src.shared.exceptions import RepositoryError, NotFoundError
 

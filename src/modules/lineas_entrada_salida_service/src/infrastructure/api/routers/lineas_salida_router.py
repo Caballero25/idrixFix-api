@@ -1,17 +1,17 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from fastapi import APIRouter, Depends, status, Path
 from sqlalchemy.orm import Session
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.use_cases.lineas_salida_use_case import LineasSalidaUseCase
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import TaraIdRequest, PanzaRequest
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasPagination, \
+from src.modules.lineas_entrada_salida_service.src.application.use_cases.lineas_salida_use_case import LineasSalidaUseCase
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_salida import TaraIdRequest, PanzaRequest
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import LineasPagination, \
     UpdateCodigoParrillaRequest, LineasFilters
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import LineasSalidaResponse, \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_salida import LineasSalidaResponse, \
     LineasSalidaUpdate
-from src.modules.lineas_entrada_salida_service.infrastructure.db.repositories.control_tara import ControlTaraRepository
-from src.modules.lineas_entrada_salida_service.infrastructure.db.repositories.lineas_salida_repository import \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.repositories.control_tara import ControlTaraRepository
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.repositories.lineas_salida_repository import \
     LineasSalidaRepository
 from src.shared.base import get_db, get_auth_db
 from src.shared.common.auditoria import get_audit_use_case

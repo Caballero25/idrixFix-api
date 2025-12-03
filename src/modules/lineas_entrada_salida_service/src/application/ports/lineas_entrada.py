@@ -1,9 +1,9 @@
 from abc import abstractmethod, ABC
 from typing import List, Tuple, Optional
 
-from src.modules.lineas_entrada_salida_service.domain.entities import LineasEntrada
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_entrada import LineasEntradaUpdate
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import \
+from src.modules.lineas_entrada_salida_service.src.domain.entities import LineasEntrada
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_entrada import LineasEntradaUpdate
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import \
     LineasFilters
 
 

@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Any
 
 from fastapi import APIRouter, status
@@ -6,9 +5,9 @@ from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.use_cases.control_tara_use_case import ControlTaraUseCase
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.control_tara import TaraResponse, TaraCreate
-from src.modules.lineas_entrada_salida_service.infrastructure.db.repositories.control_tara import ControlTaraRepository
+from src.modules.lineas_entrada_salida_service.src.application.use_cases.control_tara_use_case import ControlTaraUseCase
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.control_tara import TaraResponse, TaraCreate
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.repositories.control_tara import ControlTaraRepository
 from src.shared.base import get_auth_db
 from src.shared.common.auditoria import get_audit_use_case
 from src.shared.common.responses import success_response, error_response

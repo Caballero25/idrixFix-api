@@ -3,12 +3,12 @@ from math import ceil
 from typing import Optional, Dict, Any, List
 
 from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
-from src.modules.lineas_entrada_salida_service.application.ports.control_tara import IControlTaraRepository
-from src.modules.lineas_entrada_salida_service.application.ports.lineas_salida import ILineasSalidaRepository
-from src.modules.lineas_entrada_salida_service.domain.entities import LineasSalida
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_shared import LineasPagination, \
+from src.modules.lineas_entrada_salida_service.src.application.ports.control_tara import IControlTaraRepository
+from src.modules.lineas_entrada_salida_service.src.application.ports.lineas_salida import ILineasSalidaRepository
+from src.modules.lineas_entrada_salida_service.src.domain.entities import LineasSalida
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_shared import LineasPagination, \
     LineasFilters
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.lineas_salida import \
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.lineas_salida import \
     LineasSalidaPaginatedResponse, LineasSalidaUpdate, LineasSalidaResponse, PanzaRequest
 from src.shared.exceptions import NotFoundError, ValidationError
 

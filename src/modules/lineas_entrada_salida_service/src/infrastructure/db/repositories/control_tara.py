@@ -4,10 +4,10 @@ from typing import Optional, List
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from src.modules.lineas_entrada_salida_service.application.ports.control_tara import IControlTaraRepository
-from src.modules.lineas_entrada_salida_service.infrastructure.api.schemas.control_tara import TaraCreate
-from src.modules.lineas_entrada_salida_service.infrastructure.db.models import ControlTaraOrm
-from src.modules.lineas_entrada_salida_service.domain.entities import ControlTara
+from src.modules.lineas_entrada_salida_service.src.application.ports.control_tara import IControlTaraRepository
+from src.modules.lineas_entrada_salida_service.src.infrastructure.api.schemas.control_tara import TaraCreate
+from src.modules.lineas_entrada_salida_service.src.infrastructure.db.models import ControlTaraOrm
+from src.modules.lineas_entrada_salida_service.src.domain.entities import ControlTara
 from src.shared.exceptions import RepositoryError, NotFoundError
 
 
