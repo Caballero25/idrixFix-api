@@ -1,6 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-alembic/versions/*
 !versions/.gitkeep
 *.py[codz]
 *$py.class
