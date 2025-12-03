@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 
+from src.modules.administracion.src.infrastructure.api.routers.area_operarios_router import router as area_operarios_router
 from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.control_tara_router import router as control_tara_router
 from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.lineas_salida_router import router as lineas_salida_router
 from src.modules.lineas_entrada_salida_service.src.infrastructure.api.routers.lineas_entrada_router import router as lineas_entrada_router
@@ -67,6 +68,7 @@ app.include_router(auditoria_logs, prefix="/api/auditoria", tags=["Auditoria de 
 app.include_router(lineas_entrada_router, prefix="/api/lineas-entrada", tags=["Lineas Entrada"])
 app.include_router(lineas_salida_router, prefix="/api/lineas-salida", tags=["Lineas Salida"])
 app.include_router(control_tara_router, prefix="/api/control-tara", tags=["Control Tara"])
+app.include_router(area_operarios_router, prefix="/api/administracion/area-operarios", tags=["Area Operarios"])
 
 @app.get("/health")
 async def health_check():

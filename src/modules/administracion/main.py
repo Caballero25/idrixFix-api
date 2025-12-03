@@ -1,0 +1,25 @@
+from fastapi import FastAPI
+
+from src.modules.administracion.src.infrastructure.api.routers.area_operarios_router import router as area_operarios_router
+from src.shared.cors_config import configure_cors
+
+app = FastAPI(
+    title="Administración API",
+    description="Microservicio para administración general",
+    version="1.0.0",
+)
+
+# Configurar CORS
+configure_cors(app, "Administración Service")
+
+app.include_router(area_operarios_router, prefix="/api/administracion/area-operarios", tags=["Area Operarios"])
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "lineas_entrada_salida_service"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8004)
