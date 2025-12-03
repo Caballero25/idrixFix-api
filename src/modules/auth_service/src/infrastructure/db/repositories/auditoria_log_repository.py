@@ -28,7 +28,24 @@ class AuditoriaLogRepository(IAuditoriaLogRepository):
             # fallar la petición principal del usuario si el log falla.
             print(f"Error al escribir en log de auditoría: {e}")
             return False
-        
+
+    def create_logs_batch(self, logs_data: list[dict]) -> bool:
+        """
+        Inserta múltiples registros de auditoría en un solo commit.
+        """
+        try:
+            logs = [AuditoriaLogORM(**log) for log in logs_data]
+
+            self.db.bulk_save_objects(logs)
+            self.db.commit()
+
+            return True
+
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"Error al escribir logs de auditoría (batch): {e}")
+            return False
+
     def _apply_filters(self, query, filters: AuditoriaLogFilters):
         """Aplica los filtros de búsqueda a una query de AuditoriaLogORM."""
         if filters.ejecutado_por_id is not None:

@@ -55,6 +55,37 @@ class AuditUseCase:
         # Enviamos a la base de datos
         self.log_repository.create_log(log_data)
 
+    def log_actions_batch(
+            self,
+            logs: list[dict],
+            user_id: int
+    ):
+        """
+        Registra múltiples acciones de auditoría en una sola operación.
+        'logs' es una lista de diccionarios con:
+          - accion
+          - modelo
+          - entidad_id
+          - datos_nuevos
+          - datos_anteriores
+        """
+
+        user_snapshot = self._get_user_snapshot(user_id)
+
+        logs_preparados = []
+        for entry in logs:
+            logs_preparados.append({
+                "modelo": entry["modelo"],
+                "entidad_id": str(entry["entidad_id"]),
+                "accion": entry["accion"],
+                "datos_anteriores": entry.get("datos_anteriores"),
+                "datos_nuevos": entry.get("datos_nuevos"),
+                "ejecutado_por_id": user_id,
+                "ejecutado_por_json": user_snapshot
+            })
+
+        self.log_repository.create_logs_batch(logs_preparados)
+
     def count_logs_by_filters(self, filters: AuditoriaLogFilters) -> int:
         """Obtiene el conteo total de logs según filtros."""
         return self.log_repository.count_by_filters(filters)
