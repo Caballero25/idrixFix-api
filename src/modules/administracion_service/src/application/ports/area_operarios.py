@@ -20,12 +20,17 @@ class IAreaOperarioRepository(ABC):
         pass
 
     @abstractmethod
+    def exists_by_id(self, id: int) -> bool:
+        pass
+
+    @abstractmethod
     def get_by_id(self, id: int) -> Optional[AreaOperarios]:
         pass
-    #
-    # def delete(self, id: int) -> bool:
-    #     pass
 
     @abstractmethod
     def update(self, data: AreaOperariosRequest, id: int) -> Optional[AreaOperarios]:
+        pass
+
+    @abstractmethod
+    def soft_delete(self, id: int) -> bool:
         pass

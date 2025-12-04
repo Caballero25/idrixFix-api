@@ -30,3 +30,10 @@ class AreaOperariosUseCase:
             raise NotFoundError("No se encontró el area")
 
         return self.area_operarios_repository.update(data, id)
+
+    def remove_area(self, id: int) -> bool:
+        exists = self.area_operarios_repository.exists_by_id(id)
+        if not exists:
+            raise NotFoundError("No existe el area")
+
+        return self.area_operarios_repository.soft_delete(id)

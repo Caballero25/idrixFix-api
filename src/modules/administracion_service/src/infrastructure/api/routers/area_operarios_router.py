@@ -8,7 +8,8 @@ from src.modules.administracion_service.src.infrastructure.api.schemas.area_oper
 from src.modules.administracion_service.src.infrastructure.db.repositories.area_operarios_repository import \
     AreaOperariosRepository
 from src.shared.base import get_db
-from src.shared.common.responses import success_response
+from src.shared.common.responses import success_response, error_response
+from src.shared.exceptions import RepositoryError
 
 router = APIRouter()
 
@@ -53,3 +54,19 @@ def update_area_operario(
         data=AreaOperariosResponse.model_validate(response).model_dump(mode="json"),
         message="Area actualizada satisfactoriamente"
     )
+
+@router.delete("/{area_id}", status_code=status.HTTP_200_OK)
+def remove_area(
+        area_id: int,
+        use_case: AreaOperariosUseCase = Depends(get_area_operarios_use_case)
+):
+    try:
+        use_case.remove_area(area_id)
+        return success_response(
+            data={"id_area removida": area_id},
+            message="Area Operarios removida"
+        )
+    except RepositoryError as e:
+        return error_response(
+            message=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

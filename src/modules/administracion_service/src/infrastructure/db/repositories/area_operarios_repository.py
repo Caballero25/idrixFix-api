@@ -20,6 +20,7 @@ class AreaOperariosRepository(IAreaOperarioRepository):
         try:
             areas_orm = (
                 self.db.query(AreaOperariosORM)
+                .filter(AreaOperariosORM.AREA_ESTADO == "ACTIVO")
                 .all()
             )
 
@@ -64,6 +65,19 @@ class AreaOperariosRepository(IAreaOperarioRepository):
                 self.db.query(AreaOperariosORM.AREA_ID)
                 .filter(
                     AreaOperariosORM.AREA_NOMBRE == nombre
+                )
+                .first()
+            )
+            return area_orm is not None
+        except SQLAlchemyError as e:
+            raise RepositoryError("Error al consultar existencia del area operarios.") from e
+
+    def exists_by_id(self, id: int) -> bool:
+        try:
+            area_orm = (
+                self.db.query(AreaOperariosORM.AREA_ID)
+                .filter(
+                    AreaOperariosORM.AREA_ID == id
                 )
                 .first()
             )
@@ -117,3 +131,24 @@ class AreaOperariosRepository(IAreaOperarioRepository):
         except SQLAlchemyError as e:
             self.db.rollback()
             raise RepositoryError("Error al actualizar el código de parrilla de la línea entrada.") from e
+
+    def soft_delete(self, id: int) -> bool:
+        try:
+            area_orm = (
+                self.db.query(AreaOperariosORM)
+                .filter(AreaOperariosORM.AREA_ID == id)
+                .first()
+            )
+
+            if not area_orm:
+                raise NotFoundError(f"No existe el area con id {id}")
+
+
+            area_orm.AREA_ESTADO = "INACTIVO"
+            self.db.commit()
+            self.db.refresh(area_orm)
+
+            return True
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise RepositoryError("Error al eliminar el area.") from e
