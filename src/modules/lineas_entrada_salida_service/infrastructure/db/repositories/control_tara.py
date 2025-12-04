@@ -26,6 +26,8 @@ class ControlTaraRepository(IControlTaraRepository):
             return [
                 ControlTara(
                     id=t.id,
+                    nombre=t.nombre,
+                    descripcion=t.descripcion,
                     peso_kg=t.peso_kg,
                     is_active=t.is_active
                 )
@@ -69,6 +71,8 @@ class ControlTaraRepository(IControlTaraRepository):
                 return None
             return ControlTara(
                 id=tara_orm.id,
+                nombre=tara_orm.nombre,
+                descripcion=tara_orm.descripcion,
                 peso_kg=tara_orm.peso_kg,
                 is_active=tara_orm.is_active
             )
