@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Date, DateTime, Float, String, Time, Boolean, Index, DECIMAL
+from sqlalchemy import Column, Integer, Date, DateTime, String, Index, DECIMAL
+
 from src.shared.database import _BaseMain
 from datetime import datetime
 
