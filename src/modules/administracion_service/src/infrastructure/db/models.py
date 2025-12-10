@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Date, DateTime, String, Index, DECIMAL
+from sqlalchemy import Column, Integer, Date, DateTime, String, Index, DECIMAL, Float
 
 from src.shared.database import _BaseMain
 from datetime import datetime
@@ -54,3 +54,17 @@ class PlanningTurnoORM(_BaseMain):
     plnn_hora_fin = Column(DateTime)
 
     __table_args__ = (Index('idx_fecha_p_linea_turno', 'plnn_fecha_p', 'plnn_linea', 'plnn_turno'),)
+
+class DetalleProduccionORM(_BaseMain):
+    __tablename__ = "fm_detalle_produccion"
+
+    DPRO_ID = Column(Integer,primary_key=True,autoincrement=True)
+    DPRO_FECPROD = Column(Date)
+    DPRO_LOTE = Column(String(50))
+    DPRO_PMIGA = Column(Float,nullable=True)
+    DPRO_PPANZA = Column(Float,nullable=True)
+    DPRO_PDESPERDICIO = Column(Float,nullable=True)
+    DPRO_LINEA = Column(Integer,nullable=False)
+    DPRO_TURNOX = Column(Integer,nullable=True)
+
+    __table_args__ = (Index('DPRO_FECPROD', 'DPRO_LOTE','DPRO_LINEA'),)

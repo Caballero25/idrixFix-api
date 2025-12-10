@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime, date
 from typing import Optional
 
-
 @dataclass
 class AreaOperarios:
     area_id: int
@@ -62,3 +61,14 @@ class PlanningTurno:
     plnn_turno: Optional[int] = None
     plnn_linea: Optional[str] = None
     plnn_hora_fin: Optional[datetime] = None
+
+@dataclass
+class DetalleProduccion:
+    dpro_id: int
+    dpro_linea: int
+    dpro_fecprod: Optional[date] = None
+    dpro_lote: Optional[str] = None
+    dpro_pmiga: Optional[float] = None
+    dpro_ppanza: Optional[float] = None
+    dpro_pdesperdicio: Optional[float] = None
+    dpro_turnox: Optional[int] = None
