@@ -70,17 +70,6 @@ class EspeciesUseCase:
         if exists_by_nombre:
             raise AlreadyExistsError("Ya existe una especie con este nombre")
 
-        if not data.especie_nombre or data.especie_nombre.strip() == "":
-            raise ValidationError("El campo nombre no puede estar vacío")
-        if data.especie_familia is not None and data.especie_familia.strip() == "":
-            raise ValidationError("El campo familia no puede estar vacío")
-        if data.especie_kilos_horas is not None and data.especie_kilos_horas < 0:
-            raise ValidationError("El campo Kilos/Hora no puede estar vacío")
-        if data.especies_kilos_horas_media is not None and data.especies_kilos_horas_media < 0:
-            raise ValidationError("El campo Kilos/Hora Media no puede estar vacío")
-        if data.especies_kilos_horas_doble is not None and data.especies_kilos_horas_doble < 0:
-            raise ValidationError("El campo Kilos/Hora Doble no puede estar vacío")
-
         updated_especie = self.especies_repository.update(data, id)
 
         return EspeciesResponse(

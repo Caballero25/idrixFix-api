@@ -16,7 +16,7 @@ class EspeciesResponse(BaseModel):
 
 
 class EspeciesRequest(BaseModel):
-    especie_nombre: str
+    especie_nombre: Optional[str] = None
     especie_familia: Optional[str] = None
     especie_kilos_horas: Optional[float] = None
     especies_kilos_horas_media: Optional[float] = None
