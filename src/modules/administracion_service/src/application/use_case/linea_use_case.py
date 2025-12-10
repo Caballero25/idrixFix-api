@@ -52,6 +52,8 @@ class LineaUseCase:
         if exists:
             raise AlreadyExistsError("Ya existe una linea con este nombre")
 
+        linea_anterior = self.lineas_repository.get_by_id(id)
+
         linea = self.lineas_repository.update(data, id)
         planta = self.planta_repository.get_by_id(linea.line_planta)
 
@@ -69,7 +71,8 @@ class LineaUseCase:
             user_id=user_data.get("user_id"),
             modelo="fm_lineas_operarios",
             entidad_id=id,
-            datos_nuevos=LineaResponse.model_validate(response).model_dump(mode="json")
+            datos_nuevos=LineaResponse.model_validate(response).model_dump(mode="json"),
+            datos_anteriores=LineaResponse.model_validate(linea_anterior).model_dump(mode="json")
         )
 
         return response
