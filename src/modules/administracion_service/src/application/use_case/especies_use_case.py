@@ -3,7 +3,7 @@ from math import ceil
 from src.modules.administracion_service.src.application.ports.especies import IEspeciesRepository
 from src.modules.administracion_service.src.infrastructure.api.schemas.especies import EspeciesResponse, \
     EspeciesRequest, EspeciesPaginated
-from src.shared.exceptions import NotFoundError, AlreadyExistsError
+from src.shared.exceptions import NotFoundError, AlreadyExistsError, ValidationError
 
 
 class EspeciesUseCase:
@@ -49,7 +49,7 @@ class EspeciesUseCase:
     def create_especie(self, data: EspeciesRequest) -> EspeciesResponse:
         exists = self.especies_repository.exists_by_nombre(data.especie_nombre)
         if exists:
-            raise AlreadyExistsError("Ya existe un area con este nombre")
+            raise AlreadyExistsError("Ya existe una especie con este nombre")
         especie = self.especies_repository.create(data)
         return EspeciesResponse(
             especie_id=especie.especie_id,
@@ -65,6 +65,22 @@ class EspeciesUseCase:
         if not exists:
             raise NotFoundError("La especie no existe")
 
+        exists_by_nombre = self.especies_repository.exists_by_nombre(data.especie_nombre)
+
+        if exists_by_nombre:
+            raise AlreadyExistsError("Ya existe una especie con este nombre")
+
+        if not data.especie_nombre or data.especie_nombre.strip() == "":
+            raise ValidationError("El campo nombre no puede estar vacío")
+        if data.especie_familia is not None and data.especie_familia.strip() == "":
+            raise ValidationError("El campo familia no puede estar vacío")
+        if data.especie_kilos_horas is not None and data.especie_kilos_horas < 0:
+            raise ValidationError("El campo Kilos/Hora no puede estar vacío")
+        if data.especies_kilos_horas_media is not None and data.especies_kilos_horas_media < 0:
+            raise ValidationError("El campo Kilos/Hora Media no puede estar vacío")
+        if data.especies_kilos_horas_doble is not None and data.especies_kilos_horas_doble < 0:
+            raise ValidationError("El campo Kilos/Hora Doble no puede estar vacío")
+
         updated_especie = self.especies_repository.update(data, id)
 
         return EspeciesResponse(
@@ -75,3 +91,4 @@ class EspeciesUseCase:
             especies_kilos_horas_media=updated_especie.especies_kilos_horas_media,
             especies_kilos_horas_doble=updated_especie.especies_kilos_horas_doble
         )
+

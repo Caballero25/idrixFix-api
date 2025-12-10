@@ -17,10 +17,10 @@ class EspeciesResponse(BaseModel):
 
 class EspeciesRequest(BaseModel):
     especie_nombre: str
-    especie_familia: Optional[str]
-    especie_kilos_horas: Optional[float]
-    especies_kilos_horas_media: Optional[float]
-    especies_kilos_horas_doble: Optional[float]
+    especie_familia: Optional[str] = None
+    especie_kilos_horas: Optional[float] = None
+    especies_kilos_horas_media: Optional[float] = None
+    especies_kilos_horas_doble: Optional[float] = None
 
 class EspeciesPaginated(BaseModel):
     page: conint(ge=1) = 1
