@@ -9,7 +9,9 @@ from src.modules.administracion_service.src.infrastructure.api.schemas.area_oper
     AreaOperariosResponse
 from src.modules.administracion_service.src.infrastructure.db.repositories.area_operarios_repository import \
     AreaOperariosRepository
+from src.modules.auth_service.src.application.use_cases.audit_use_case import AuditUseCase
 from src.shared.base import get_db
+from src.shared.common.auditoria import get_audit_use_case
 from src.shared.common.responses import success_response, error_response
 from src.shared.exceptions import RepositoryError
 from src.shared.security import get_current_user_data
@@ -17,10 +19,12 @@ from src.shared.security import get_current_user_data
 router = APIRouter()
 
 def get_area_operarios_use_case(
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        audit_uc: AuditUseCase = Depends(get_audit_use_case)
 ) -> AreaOperariosUseCase:
     return AreaOperariosUseCase(
-        area_operarios_repository=AreaOperariosRepository(db)
+        area_operarios_repository=AreaOperariosRepository(db),
+        audit_use_case=audit_uc
     )
 
 @router.get("/", status_code=status.HTTP_200_OK)
