@@ -28,5 +28,5 @@ class LineaCreate(BaseModel):
 
 
 class LineaUpdate(BaseModel):
-    line_nombre: str
+    line_nombre: Optional[str] = None
     line_planta: Optional[int] = None

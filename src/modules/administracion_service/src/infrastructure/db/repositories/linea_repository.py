@@ -112,8 +112,12 @@ class LineaRepository(ILineaRepository):
         if linea_orm is None:
             raise NotFoundError("La linea no existe")
 
-        linea_orm.LINE_NOMBRE = data.line_nombre
-        linea_orm.LINE_PLANTA = data.line_planta
+        if data.line_nombre is not None:
+            linea_orm.LINE_NOMBRE = data.line_nombre
+
+        if data.line_planta is not None:
+            linea_orm.LINE_PLANTA = data.line_planta
+
         linea_orm.LINE_FECMOD = datetime.now()
 
         try:
